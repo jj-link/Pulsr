@@ -14,7 +14,7 @@
 #include "config.h"
 #include "decoder/ISignalCapture.h"
 #include "decoder/IProtocolDecoder.h"
-#include "shared/IStatusIndicator.h"
+#include "utils/IStatusIndicator.h"
 #include "transmission/IIRTransmitter.h"
 
 // TODO: Implement concrete classes

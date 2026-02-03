@@ -168,12 +168,12 @@ esp32/
 │   ├── main.cpp            # Production firmware
 │   ├── decoder/            # Learning mode implementations
 │   ├── transmission/       # Queue processing implementations
-│   ├── shared/             # Cross-cutting (LED, state machine)
+│   ├── utils/              # Utilities (LED, WiFi, etc.)
 │   └── hardware_tests/     # Standalone test scripts
 ├── include/
 │   ├── decoder/            # ISignalCapture, IProtocolDecoder
 │   ├── transmission/       # IIRTransmitter
-│   └── shared/             # IStatusIndicator
+│   └── utils/              # IStatusIndicator
 └── platformio.ini
 
 web/
@@ -196,7 +196,7 @@ web/
 
 **Platform-Based:** Each platform (ESP32, Web) has self-contained docs for each feature.
 
-**Parallel Work:** Teams can work on ESP32 decoder and Web decoder independently - each has their own plan and progress tracking.
+**Parallel Work:** Teams (or agents) can work on ESP32 decoder and Web decoder independently - each has their own plan and progress tracking.
 
 **plan.md Contains:**
 - Feature requirements
