@@ -87,6 +87,33 @@ sequenceDiagram
 -   **Polling vs Streaming**: To balance device stability with responsiveness, we will use a "Fast Poll" mechanism or an optimized persistent stream connection from the ESP32 to the Cloud.
 -   **Protocol Support**: The transmitter will support dynamic protocol switching (swapping between NEC, Sony, etc.) based on the metadata stored during the Learning phase.
 
+## Design Principles
+
+### Loose Coupling
+
+- **Command Queue Interface (`ICommandQueue`)**: Defines `enqueue()`, `dequeue()`, `peek()`, and `markComplete()` methods. Decouples from specific database implementation.
+- **Transmitter Abstraction (`IIRTransmitter`)**: Interface with `transmit(signal: IRSignal): TransmitResult`. Allows mock transmitter for testing and different hardware implementations (ESP32, Raspberry Pi Pico).
+- **Protocol Encoder Interface (`IProtocolEncoder`)**: Mirrors decoder interface. Each protocol has an encoder converting command metadata to raw timing arrays.
+- **Notification Service (`IStatusNotifier`)**: Abstracts "command status changed" notifications. Web UI, mobile push, and email can all implement this interface.
+
+### TDD Approach
+
+**Unit Tests (write first):**
+- Test FIFO ordering: enqueue A, B, C → dequeue returns A, B, C
+- Test status transitions: Pending → Sent, Pending → Failed
+- Test retry logic: Failed commands re-enqueue with backoff
+
+**Protocol Encoder Tests:**
+- Test NEC encoder produces correct carrier frequency and pulse timings
+- Test encoder output matches decoder input (symmetry verification)
+
+**Integration Tests:**
+- Mock `IIRTransmitter` to verify queue draining behavior
+- Simulate network latency to test timeout handling
+
+**Performance Tests:**
+- Verify 10-command burst completes in order within latency target
+
 ## Verification
 
 -   **Latency Measurement**: Automated logging to measure round-trip time.

@@ -94,6 +94,31 @@ sequenceDiagram
 -   **Data Storage**: Commands will be stored with metadata including the protocol type, address, command codes, and a raw timing array. This ensures broader compatibility than just storing the hex code.
 -   **Timeout Handling**: To prevent getting stuck, the learning mode will automatically timeout after 30 seconds if no signal is received.
 
+## Design Principles
+
+### Loose Coupling
+
+- **Protocol Decoder Interface (`IProtocolDecoder`)**: Defines `decode(rawTimings: number[]): DecodedSignal | null`. Each protocol (NEC, Sony, Samsung) is a separate implementation. New protocols can be added without modifying existing code (Open/Closed Principle).
+- **Signal Capture Abstraction (`ISignalCapture`)**: Abstracts hardware IR receiver. Enables unit testing decoder logic with synthetic timing arrays and swapping hardware modules without changing business logic.
+- **Storage Interface (`ICommandRepository`)**: Decouples from Firestore. Enables in-memory storage for tests.
+- **Event-Driven State Changes**: Use event bus pattern for learning mode state changes rather than tight Web UI → DB → ESP32 coupling.
+
+### TDD Approach
+
+**Unit Tests (write first):**
+- Test each protocol decoder with known timing patterns (e.g., Samsung TV power = specific pulse train)
+- Test raw fallback triggers when no decoder matches
+- Test timeout logic (30-second expiry)
+
+**Hardware Simulation Tests:**
+- Create test fixtures with recorded real-world timing data from actual remotes
+- Verify decode → encode → decode round-trip produces identical results
+
+**Integration Tests:**
+- Mock `ISignalCapture` to inject known signals and verify end-to-end flow
+
+> **Note:** Protocol decoders are ideal TDD candidates—deterministic inputs (timing arrays) produce deterministic outputs (protocol, address, command).
+
 ## Verification
 
 -   **Protocol Test**: Verify that standard TV remotes (Samsung/LG) are detected with their specific protocol names.

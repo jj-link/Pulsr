@@ -106,3 +106,47 @@ graph LR
     Chat -.-> Devices
     Chat -.-> Designer
 ```
+
+## Design Principles
+
+This project follows **Loose Coupling** and **Test-Driven Development (TDD)** principles where appropriate.
+
+### Loose Coupling
+
+All major subsystems communicate through well-defined interfaces rather than concrete implementations. This enables:
+
+- **Testability**: Mock implementations can replace real services (Firestore, IR hardware, AI providers) in tests
+- **Flexibility**: Swap providers (e.g., OpenAI → Anthropic) without rewriting business logic
+- **Parallel Development**: Teams can work on different tracks independently using interface contracts
+
+**Key Abstractions:**
+
+| Interface | Purpose | Implementations |
+|-----------|---------|-----------------|
+| `ICommandRepository` | Command storage | `FirestoreCommandRepository`, `InMemoryCommandRepository` |
+| `ICommandQueue` | Transmission queue | `FirestoreQueue`, `InMemoryQueue` |
+| `IProtocolDecoder` | IR signal decoding | `NECDecoder`, `SonyDecoder`, `SamsungDecoder` |
+| `IProtocolEncoder` | IR signal encoding | `NECEncoder`, `SonyEncoder`, `SamsungEncoder` |
+| `ISignalCapture` | Hardware IR input | `ESP32SignalCapture`, `MockSignalCapture` |
+| `IIRTransmitter` | Hardware IR output | `ESP32Transmitter`, `MockTransmitter` |
+| `IAIProvider` | AI chat completions | `OpenAIProvider`, `AnthropicProvider`, `MockAIProvider` |
+| `IKnowledgeRetriever` | RAG context lookup | `FirestoreKnowledgeRetriever`, `StaticKnowledgeRetriever` |
+
+### Test-Driven Development
+
+TDD is applied **selectively** based on testability:
+
+| Track | TDD Applicability | Rationale |
+|-------|-------------------|-----------|
+| **Decoder** | Very High | Protocol decoders have deterministic I/O—ideal for test-first design |
+| **Transmission** | High | Queue logic, FIFO ordering, and retry behavior are pure functions |
+| **Chatbot** | High | Prompt construction and session management are testable without API calls |
+| **Designer** | Low-Medium | Data layer (validation, persistence) suits TDD; UI interactions require manual/E2E testing |
+
+**TDD Workflow:**
+1. Write a failing test that defines expected behavior
+2. Implement minimal code to pass the test
+3. Refactor while keeping tests green
+4. Repeat for next behavior
+
+Each track's plan document includes specific unit, integration, and contract test specifications.
