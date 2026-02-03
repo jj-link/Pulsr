@@ -149,4 +149,62 @@ TDD is applied **selectively** based on testability:
 3. Refactor while keeping tests green
 4. Repeat for next behavior
 
-Each track's plan document includes specific unit, integration, and contract test specifications.
+## Project Structure
+
+This project uses a **platform-based organization** where documentation lives with the code it describes:
+
+```
+docs/
+└── ARCHITECTURE.md         # This file - system overview
+
+esp32/
+├── decoder/
+│   ├── plan.md             # Design, Firestore schema, task list
+│   └── progress.md         # Implementation checklist
+├── transmission/
+│   ├── plan.md
+│   └── progress.md
+├── src/
+│   ├── main.cpp            # Production firmware
+│   ├── decoder/            # Learning mode implementations
+│   ├── transmission/       # Queue processing implementations
+│   ├── shared/             # Cross-cutting (LED, state machine)
+│   └── hardware_tests/     # Standalone test scripts
+├── include/
+│   ├── decoder/            # ISignalCapture, IProtocolDecoder
+│   ├── transmission/       # IIRTransmitter
+│   └── shared/             # IStatusIndicator
+└── platformio.ini
+
+web/
+└── features/
+    ├── decoder/
+    │   ├── plan.md         # Design, Firestore schema, task list
+    │   └── progress.md     # Implementation checklist
+    ├── transmission/
+    │   ├── plan.md
+    │   └── progress.md
+    ├── designer/
+    │   ├── plan.md
+    │   └── progress.md
+    └── chatbot/
+        ├── plan.md
+        └── progress.md
+```
+
+### Organization Rationale
+
+**Platform-Based:** Each platform (ESP32, Web) has self-contained docs for each feature.
+
+**Parallel Work:** Teams can work on ESP32 decoder and Web decoder independently - each has their own plan and progress tracking.
+
+**plan.md Contains:**
+- Feature requirements
+- Firestore schema (duplicated where needed)
+- Implementation design
+- Task list
+
+**progress.md Contains:**
+- Checkboxes for completed tasks
+- Current blockers
+- Next steps

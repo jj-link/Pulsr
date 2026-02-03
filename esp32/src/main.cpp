@@ -12,10 +12,10 @@
 
 #include <Arduino.h>
 #include "config.h"
-#include "abstractions/ISignalCapture.h"
-#include "abstractions/IProtocolDecoder.h"
-#include "abstractions/IStatusIndicator.h"
-#include "abstractions/IIRTransmitter.h"
+#include "decoder/ISignalCapture.h"
+#include "decoder/IProtocolDecoder.h"
+#include "shared/IStatusIndicator.h"
+#include "transmission/IIRTransmitter.h"
 
 // TODO: Implement concrete classes
 // - ESP32SignalCapture : ISignalCapture
