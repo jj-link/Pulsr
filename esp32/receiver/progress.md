@@ -26,10 +26,11 @@
 - [x] **ESP32SignalCapture**
   - [x] IRrecv wrapper implementation
   - [x] Hardware tested via `ir_decoder_test`
-- [ ] **LearningStateMachine**
-  - [ ] State transition logic
-  - [ ] 30-second timeout handler
-  - [ ] Firestore state listener
+- [x] **LearningStateMachine**
+  - [x] State transition logic (IDLE → LEARNING → CAPTURED/TIMEOUT → IDLE)
+  - [x] Configurable timeout (default 30 seconds)
+  - [x] Callback system for state changes and signal capture
+  - [ ] Firestore state listener integration (requires Firebase SDK)
 
 ### Firebase Integration
 - [ ] Firebase ESP32 SDK setup
