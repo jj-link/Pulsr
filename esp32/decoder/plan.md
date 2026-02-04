@@ -59,23 +59,36 @@ Manages learning mode state and timeouts.
 
 ## Testing Strategy
 
-### Unit Tests (TDD)
-```cpp
-// test/test_protocol_decoder/
-test_nec_protocol_decodes_correctly()
-test_samsung_protocol_decodes_correctly()
-test_sony_protocol_decodes_correctly()
-test_unknown_protocol_returns_raw()
-test_decoder_round_trip_symmetry()
+### Native Unit Tests (Fast TDD)
+Tests run on your desktop machine (~1 second) using mock Arduino types.
+
+**Run tests:**
+```bash
+pio test -e native_test
 ```
 
-### Hardware Tests
+**Test structure:**
+```cpp
+// test/test_protocol_decoder/test_nec_decoder.cpp
+test_nec_protocol_decodes_tv_power()
+test_nec_protocol_decodes_samsung_tv_volume_up()
+test_unknown_protocol_returns_raw()
+```
+
+**How it works:**
+- `NATIVE_BUILD` flag enables conditional compilation
+- `test/mock_arduino.h` provides mock types for `decode_results`, protocol constants
+- Tests compile and run natively without ESP32 hardware
+
+### Hardware Integration Tests
 Use `platformio.ini` environment `ir_receiver_test`:
 ```bash
 pio run -e ir_receiver_test --target upload
 ```
 
 See `src/hardware_tests/ir_decoder_test.cpp` for validation script.
+
+This verifies real IR signal capture with physical hardware.
 
 ## Dependencies
 

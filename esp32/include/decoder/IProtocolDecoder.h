@@ -1,11 +1,17 @@
 #ifndef I_PROTOCOL_DECODER_H
 #define I_PROTOCOL_DECODER_H
 
-#include <Arduino.h>
-#include <IRrecv.h>
+#ifdef NATIVE_BUILD
+    // Native testing mode - use mocks
+    #include "../test/mock_arduino.h"
+#else
+    // Embedded mode - use real Arduino/IRremoteESP8266
+    #include <Arduino.h>
+    #include <IRrecv.h>
+#endif
 
 struct DecodedSignal {
-    String protocol;
+    const char* protocol;  // String literal: "NEC", "SAMSUNG", "SONY", "RAW"
     uint32_t address;
     uint32_t command;
     uint64_t value;

@@ -1,7 +1,7 @@
 # Decoder - ESP32 Status
 
-**Last Updated:** 2026-02-02  
-**Phase:** Foundation Complete
+**Last Updated:** 2026-02-03  
+**Phase:** Core Classes Implementation
 
 ## Progress
 
@@ -11,16 +11,18 @@
 - [x] Production firmware scaffold
 
 ### Testing Infrastructure
-- [ ] Unity testing framework configured
-- [ ] Test fixtures with known IR signal data
+- [x] Native testing framework configured (runs on desktop, ~1 second)
+- [x] Mock Arduino types for native tests (`test/mock_arduino.h`)
+- [x] Test fixtures with known IR signal data
 - [ ] Mock ISignalCapture for tests
+- **Testing Strategy:** Native tests for fast TDD, hardware tests for integration verification
 
 ### Core Classes (TDD)
-- [ ] **IRLibProtocolDecoder**
-  - [ ] NEC protocol decoder + tests
-  - [ ] Samsung protocol decoder + tests
-  - [ ] Sony protocol decoder + tests
-  - [ ] Raw fallback + tests
+- [x] **IRLibProtocolDecoder**
+  - [x] NEC protocol decoder + tests
+  - [x] Samsung protocol decoder + tests
+  - [x] Sony protocol decoder + tests
+  - [x] Raw fallback + tests
   - [ ] Round-trip symmetry tests
 - [ ] **ESP32SignalCapture**
   - [ ] IRrecv wrapper implementation
