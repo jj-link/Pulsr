@@ -23,9 +23,9 @@
   - [x] Samsung protocol decoder + tests
   - [x] Sony protocol decoder + tests
   - [x] Raw fallback + tests
-- [ ] **ESP32SignalCapture**
-  - [ ] IRrecv wrapper implementation
-  - [ ] Hardware tested via `ir_receiver_test`
+- [x] **ESP32SignalCapture**
+  - [x] IRrecv wrapper implementation
+  - [x] Hardware tested via `ir_decoder_test`
 - [ ] **LearningStateMachine**
   - [ ] State transition logic
   - [ ] 30-second timeout handler
