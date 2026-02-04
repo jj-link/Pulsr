@@ -33,11 +33,14 @@
   - [ ] Firestore state listener integration (requires Firebase SDK)
 
 ### Firebase Integration
-- [ ] Firebase ESP32 SDK setup
-- [ ] WiFi configuration
-- [ ] Device authentication
-- [ ] Upload commands to Firestore
-- [ ] Listen for `isLearning` state changes
+- [x] Firebase ESP32 SDK setup (Firebase Arduino Client Library v4.4.14)
+- [x] WiFi connection manager with auto-reconnect
+- [x] Device authentication (email/password)
+- [x] Upload commands to Firestore (`devices/{deviceId}/commands/{commandId}`)
+- [x] Poll for `isLearning` state changes (2-second interval with callbacks)
+- [x] FirebaseManager class with state management
+- [ ] Integration with LearningStateMachine callbacks
+- [ ] Production testing with real Firebase project
 
 ## Blockers
 
