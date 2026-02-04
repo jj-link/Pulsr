@@ -7,8 +7,8 @@ A smart universal remote system built with ESP32, Firebase, and React.
 - [System Architecture](ARCHITECTURE.md) - System overview and design principles
 
 ### Embedded Software
-- [Decoder](esp32/decoder/plan.md) - IR signal learning
-- [Transmission](esp32/transmission/plan.md) - IR signal transmission
+- [Receiver](esp32/receiver/plan.md) - IR signal learning
+- [Transmitter](esp32/transmitter/plan.md) - IR signal transmission
 
 ### Web App
 - [Decoder UI](web/features/decoder/plan.md) - Learning mode interface

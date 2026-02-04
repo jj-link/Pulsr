@@ -160,21 +160,21 @@ docs/
 └── ARCHITECTURE.md         # This file - system overview
 
 esp32/
-├── decoder/
+├── receiver/
 │   ├── plan.md             # Design, Firestore schema, task list
 │   └── progress.md         # Implementation checklist
-├── transmission/
+├── transmitter/
 │   ├── plan.md
 │   └── progress.md
 ├── src/
 │   ├── main.cpp            # Production firmware
 │   ├── decoder/            # Learning mode implementations
-│   ├── transmission/       # Queue processing implementations
+│   ├── transmitter/       # Queue processing implementations
 │   ├── utils/              # Utilities (LED, WiFi, etc.)
 │   └── hardware_tests/     # Standalone test scripts
 ├── include/
 │   ├── decoder/            # ISignalCapture, IProtocolDecoder
-│   ├── transmission/       # IIRTransmitter
+│   ├── transmitter/       # IIRTransmitter
 │   └── utils/              # IStatusIndicator
 └── platformio.ini
 
