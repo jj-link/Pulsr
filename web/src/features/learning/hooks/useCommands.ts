@@ -37,10 +37,20 @@ export function useCommands(repository: ICommandRepository, deviceId: string | n
     }
   }
 
+  const updateCommand = async (commandId: string, updates: Partial<IRCommand>) => {
+    try {
+      await repository.update(commandId, updates)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update command')
+      throw err
+    }
+  }
+
   return {
     commands,
     loading,
     error,
     deleteCommand,
+    updateCommand,
   }
 }

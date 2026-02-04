@@ -5,14 +5,16 @@ import { useCommands } from '../hooks/useCommands'
 import { DeviceSelector } from '../components/DeviceSelector'
 import { LearningModal } from '../components/LearningModal'
 import { CommandList } from '../components/CommandList'
+import { CreateDeviceModal } from '../components/CreateDeviceModal'
 import './LearningPage.css'
 
 export function LearningPage() {
   const { deviceRepository, commandRepository } = useRepositories()
-  const { devices, setLearningMode } = useDevices(deviceRepository)
+  const { devices, setLearningMode, createDevice } = useDevices(deviceRepository)
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null)
   const [showLearningModal, setShowLearningModal] = useState(false)
-  const { commands, deleteCommand } = useCommands(commandRepository, selectedDeviceId)
+  const [showCreateDeviceModal, setShowCreateDeviceModal] = useState(false)
+  const { commands, deleteCommand, updateCommand } = useCommands(commandRepository, selectedDeviceId)
 
   const selectedDevice = devices.find((d) => d.id === selectedDeviceId)
 
@@ -28,6 +30,12 @@ export function LearningPage() {
     setShowLearningModal(false)
   }
 
+  const handleCreateDevice = async (name: string) => {
+    const device = await createDevice(name, 'user_123')
+    setSelectedDeviceId(device.id)
+    setShowCreateDeviceModal(false)
+  }
+
   return (
     <div className="learning-page">
       <div className="page-header">
@@ -40,7 +48,7 @@ export function LearningPage() {
           devices={devices}
           selectedDeviceId={selectedDeviceId}
           onSelectDevice={setSelectedDeviceId}
-          onCreateDevice={() => alert('Create device coming soon')}
+          onCreateDevice={() => setShowCreateDeviceModal(true)}
         />
 
         {selectedDevice && (
@@ -62,7 +70,7 @@ export function LearningPage() {
       </div>
 
       {selectedDeviceId && (
-        <CommandList commands={commands} onDelete={deleteCommand} />
+        <CommandList commands={commands} onDelete={deleteCommand} onEdit={updateCommand} />
       )}
 
       <LearningModal
@@ -70,6 +78,12 @@ export function LearningPage() {
         onClose={handleStopLearning}
         onComplete={handleStopLearning}
         deviceName={selectedDevice?.name || ''}
+      />
+
+      <CreateDeviceModal
+        isOpen={showCreateDeviceModal}
+        onClose={() => setShowCreateDeviceModal(false)}
+        onCreate={handleCreateDevice}
       />
     </div>
   )
