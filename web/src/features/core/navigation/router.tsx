@@ -1,8 +1,8 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { AppLayout } from './AppLayout'
-import { DecoderPage } from '@/features/decoder/pages/DecoderPage'
+import { LearningPage } from '@/features/learning/pages/LearningPage'
 import { DesignerPage } from '@/features/designer/pages/DesignerPage'
-import { TransmissionPage } from '@/features/transmission/pages/TransmissionPage'
+import { RemotePage } from '@/features/remote/pages/RemotePage'
 
 export const router = createBrowserRouter([
   {
@@ -11,15 +11,15 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <TransmissionPage />,
+        element: <RemotePage />,
       },
       {
         path: 'remote',
-        element: <TransmissionPage />,
+        element: <RemotePage />,
       },
       {
         path: 'devices',
-        element: <DecoderPage />,
+        element: <LearningPage />,
       },
       {
         path: 'designer',

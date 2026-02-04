@@ -1,4 +1,4 @@
-# Decoder - Web UI Status
+# Learning - Web UI Status
 
 **Last Updated:** 2026-02-02  
 **Phase:** Not Started

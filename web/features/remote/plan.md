@@ -1,4 +1,4 @@
-# Transmission - Web UI Implementation
+# Remote - Web UI Implementation
 
 **Purpose:** Provide remote control buttons that trigger IR transmission.
 
@@ -159,7 +159,7 @@ devices/{deviceId}
 ## File Structure
 
 ```
-features/transmission/
+features/remote/
 ├── components/
 │   ├── RemoteButton.tsx
 │   ├── RemoteGrid.tsx

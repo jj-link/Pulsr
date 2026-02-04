@@ -1,4 +1,4 @@
-# Decoder - Web UI Implementation
+# Learning - Web UI Implementation
 
 **Purpose:** Provide UI for triggering learning mode and viewing captured commands.
 
@@ -157,7 +157,7 @@ devices/{deviceId}
 ## File Structure
 
 ```
-features/decoder/
+features/learning/
 ├── components/
 │   ├── LearningModal.tsx
 │   ├── CommandList.tsx

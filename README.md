@@ -11,8 +11,8 @@ A smart universal remote system built with ESP32, Firebase, and React.
 - [Transmitter](esp32/transmitter/plan.md) - IR signal transmission
 
 ### Web App
-- [Decoder UI](web/features/decoder/plan.md) - Learning mode interface
-- [Transmission UI](web/features/transmission/plan.md) - Remote control buttons
+- [Learning UI](web/features/learning/plan.md) - Learning mode interface
+- [Remote UI](web/features/remote/plan.md) - Remote control buttons
 - [Designer UI](web/features/designer/plan.md) - Layout editor
 - [Chatbot UI](web/features/chatbot/plan.md) - AI assistant
 

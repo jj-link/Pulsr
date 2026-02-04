@@ -1,4 +1,4 @@
-# Transmission - Web UI Status
+# Remote - Web UI Status
 
 **Last Updated:** 2026-02-02  
 **Phase:** Not Started

@@ -1,4 +1,4 @@
-export function TransmissionPage() {
+export function RemotePage() {
   return (
     <div>
       <h2>Remote View</h2>

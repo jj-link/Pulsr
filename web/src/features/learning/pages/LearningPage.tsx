@@ -1,4 +1,4 @@
-export function DecoderPage() {
+export function LearningPage() {
   return (
     <div>
       <h2>Device List</h2>
