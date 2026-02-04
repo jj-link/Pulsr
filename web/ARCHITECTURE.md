@@ -150,7 +150,7 @@ graph LR
 web/
 ├── src/
 │   ├── features/
-│   │   ├── decoder/
+│   │   ├── learning/
 │   │   │   ├── components/
 │   │   │   │   ├── LearningModal.tsx
 │   │   │   │   ├── CommandList.tsx
@@ -168,7 +168,7 @@ web/
 │   │   │   └── __tests__/
 │   │   │       ├── LearningModal.test.tsx
 │   │   │       └── useCommands.test.ts
-│   │   ├── transmission/
+│   │   ├── remote/
 │   │   │   ├── components/
 │   │   │   ├── hooks/
 │   │   │   ├── repositories/
@@ -221,10 +221,10 @@ const router = createBrowserRouter([
     path: '/',
     element: <AppShell />,
     children: [
-      { index: true, element: <RemoteView /> },              // Transmission
+      { index: true, element: <RemoteView /> },              // Remote
       { path: 'devices', element: <DeviceList /> },          // Designer
       { path: 'designer/:id', element: <LayoutEditor /> },   // Designer
-      { path: 'designer/:id/learn', element: <LearnModal /> }, // Decoder
+      { path: 'designer/:id/learn', element: <LearningModal /> }, // Learning
     ],
   },
 ])
@@ -402,7 +402,7 @@ service cloud.firestore {
 - [ ] Router setup with AppShell
 - [ ] Repository interfaces defined
 
-### Phase 2: Decoder UI (Week 2)
+### Phase 2: Learning UI (Week 2)
 - [ ] Mock repositories
 - [ ] LearningModal component
 - [ ] CommandList component
@@ -415,7 +415,7 @@ service cloud.firestore {
 - [ ] CommandPicker
 - [ ] Layout validation logic (TDD)
 
-### Phase 4: Transmission UI (Week 4)
+### Phase 4: Remote UI (Week 4)
 - [ ] RemoteButton component
 - [ ] RemoteGrid layout
 - [ ] QueueMonitor

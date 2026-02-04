@@ -31,7 +31,7 @@
 
 ## Blockers
 
-Requires ESP32 Decoder track to implement Firestore integration first.
+Requires ESP32 Receiver track to implement Firestore integration first.
 
 ## Next Steps
 

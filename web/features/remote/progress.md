@@ -32,11 +32,11 @@
 ## Blockers
 
 Requires:
-- ESP32 Transmission track (queue processor)
+- ESP32 Transmitter track (queue processor)
 - Designer track (layout data)
 
 ## Next Steps
 
-1. Wait for ESP32 transmission and Designer tracks
+1. Wait for ESP32 transmitter and Designer tracks
 2. Implement RemoteButton with TDD
 3. Add real-time queue status listeners

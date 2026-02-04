@@ -6,8 +6,8 @@
 web/
 ├── src/
 │   ├── features/
-│   │   ├── decoder/
-│   │   ├── transmission/
+│   │   ├── learning/
+│   │   ├── remote/
 │   │   ├── designer/
 │   │   ├── chatbot/
 │   │   └── core/
@@ -79,10 +79,10 @@ features/core/
 
 ## Detailed Feature Breakdown
 
-### Decoder Feature
+### Learning Feature
 
 ```
-features/decoder/
+features/learning/
 ├── components/
 │   ├── LearningModal.tsx          # Modal for learning mode workflow
 │   ├── CommandList.tsx            # Display learned commands
@@ -110,10 +110,10 @@ features/decoder/
     └── useLearningMode.test.ts
 ```
 
-### Transmission Feature
+### Remote Feature
 
 ```
-features/transmission/
+features/remote/
 ├── components/
 │   ├── RemoteButton.tsx           # Individual IR button
 │   ├── RemoteGrid.tsx             # Button layout container
@@ -212,10 +212,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 ```typescript
 import { createBrowserRouter } from 'react-router-dom'
 import { AppShell } from './features/core/navigation/AppShell'
-import { RemoteView } from './features/transmission/components/RemoteView'
+import { RemoteView } from './features/remote/components/RemoteView'
 import { DeviceList } from './features/designer/components/DeviceList'
 import { LayoutEditor } from './features/designer/components/LayoutEditor'
-import { LearnModal } from './features/decoder/components/LearnModal'
+import { LearnModal } from './features/learning/components/LearnModal'
 
 export const router = createBrowserRouter([
   {
@@ -273,8 +273,8 @@ export default App
 ```
 tests/
 ├── e2e/                          # Playwright E2E tests
-│   ├── decoder.spec.ts           # Learning workflow
-│   ├── transmission.spec.ts      # Button press workflow
+│   ├── learning.spec.ts           # Learning workflow
+│   ├── remote.spec.ts             # Button press workflow
 │   ├── designer.spec.ts          # Layout editing
 │   └── chatbot.spec.ts           # Chat interaction
 ├── fixtures/                     # Shared test data
@@ -397,19 +397,19 @@ module.exports = {
 ```typescript
 // Use path aliases for cleaner imports
 import { Button } from '@/core/ui/button'
-import { useCommands } from '@/features/decoder/hooks'
-import { LearningModal } from '@/features/decoder/components'
+import { useCommands } from '@/features/learning/hooks'
+import { LearningModal } from '@/features/learning/components'
 ```
 
 ### Barrel Exports
 ```typescript
-// features/decoder/components/index.ts
+// features/learning/components/index.ts
 export { LearningModal } from './LearningModal'
 export { CommandList } from './CommandList'
 export { DeviceSelector } from './DeviceSelector'
 
 // Import from barrel
-import { LearningModal, CommandList } from '@/features/decoder/components'
+import { LearningModal, CommandList } from '@/features/learning/components'
 ```
 
 ## File Naming Conventions
