@@ -23,7 +23,6 @@
   - [x] Samsung protocol decoder + tests
   - [x] Sony protocol decoder + tests
   - [x] Raw fallback + tests
-  - [ ] Round-trip symmetry tests
 - [ ] **ESP32SignalCapture**
   - [ ] IRrecv wrapper implementation
   - [ ] Hardware tested via `ir_receiver_test`

@@ -19,7 +19,7 @@
   - [ ] NEC encoder + tests
   - [ ] Samsung encoder + tests
   - [ ] Sony encoder + tests
-  - [ ] Encoder/decoder symmetry tests
+  - [ ] Round-trip symmetry tests (encode → decode → verify)
 - [ ] **ESP32IRTransmitter**
   - [ ] IRsend wrapper implementation
   - [ ] Carrier frequency configuration (38kHz)
