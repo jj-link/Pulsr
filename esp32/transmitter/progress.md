@@ -21,9 +21,10 @@
   - [x] Sony encoder + tests
   - [x] RAW passthrough + tests
   - [x] Round-trip symmetry tests (encode → decode → verify all passing)
-- [ ] **ESP32IRTransmitter**
-  - [ ] IRsend wrapper implementation
-  - [ ] Carrier frequency configuration (38kHz)
+- [x] **ESP32IRTransmitter**
+  - [x] IRsend wrapper implementation
+  - [x] Carrier frequency configuration (38kHz)
+  - [x] Production build verified (17.1% Flash, 14.8% RAM)
   - [ ] Hardware tested via `ir_transmitter_test`
 - [ ] **QueueProcessor**
   - [ ] Firestore polling logic (~100ms)
