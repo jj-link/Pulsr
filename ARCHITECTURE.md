@@ -168,12 +168,12 @@ esp32/
 │   └── progress.md
 ├── src/
 │   ├── main.cpp            # Production firmware
-│   ├── decoder/            # Learning mode implementations
+│   ├── receiver/            # Learning mode implementations
 │   ├── transmitter/       # Queue processing implementations
 │   ├── utils/              # Utilities (LED, WiFi, etc.)
 │   └── hardware_tests/     # Standalone test scripts
 ├── include/
-│   ├── decoder/            # ISignalCapture, IProtocolDecoder
+│   ├── receiver/            # ISignalCapture, IProtocolDecoder
 │   ├── transmitter/       # IIRTransmitter
 │   └── utils/              # IStatusIndicator
 └── platformio.ini

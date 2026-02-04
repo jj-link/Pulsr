@@ -1,4 +1,4 @@
-#include "decoder/IRLibProtocolDecoder.h"
+#include "receiver/IRLibProtocolDecoder.h"
 
 #ifndef NATIVE_BUILD
     #include <Arduino.h>

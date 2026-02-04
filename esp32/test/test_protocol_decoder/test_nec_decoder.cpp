@@ -1,6 +1,6 @@
 #include <unity.h>
-#include "decoder/IProtocolDecoder.h"
-#include "decoder/IRLibProtocolDecoder.h"
+#include "receiver/IProtocolDecoder.h"
+#include "receiver/IRLibProtocolDecoder.h"
 
 // Unity requires these functions
 void setUp(void) {
