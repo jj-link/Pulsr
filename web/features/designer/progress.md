@@ -22,7 +22,7 @@
   - [ ] Label input
   - [ ] Command assignment
 - [ ] **CommandPicker**
-  - [ ] Command list from Decoder
+  - [ ] Command list from Learning
   - [ ] Filter by device
   - [ ] Search functionality
 
@@ -40,12 +40,12 @@
 ## Blockers
 
 Requires:
-- Decoder track (command library)
-- Transmission track (button functionality)
+- Learning feature (command library)
+- Remote feature (button functionality)
 
 ## Next Steps
 
-1. Wait for Decoder and Transmission tracks
+1. Wait for Learning and Remote features
 2. Create React app scaffold
 3. Implement data layer validation with TDD
 4. Build LayoutEditor with Storybook

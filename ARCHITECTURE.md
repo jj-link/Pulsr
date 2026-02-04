@@ -1,6 +1,6 @@
 # Pulsr — System Architecture
 
-**Goal:** Visualize how the four distinct implementation tracks interact to form the complete Pulsr system.
+**Goal:** Visualize how the four distinct features interact to form the complete Pulsr system.
 
 ## System Architecture
 
@@ -11,22 +11,22 @@ The system revolves around **Firebase** as the central message bus. The Web App 
 ```mermaid
 graph TD
     %% Subsystems
-    subgraph Track2_Designer [Track 2: Remote Designer]
+    subgraph Feature2_Designer [Feature 2: Designer]
         UI_Designer[Layout Editor]
         UI_Remote[Remote Logic]
     end
 
-    subgraph Track3_Transmission [Track 3: Transmission]
+    subgraph Feature3_Remote [Feature 3: Remote]
         QueueService[Queue Service]
         ESP_Tx[ESP32 Transmitter]
     end
 
-    subgraph Track1_Decoder [Track 1: Decoder]
+    subgraph Feature1_Learning [Feature 1: Learning]
         UI_Learn[Learning UI]
         ESP_Rx[ESP32 Receiver]
     end
 
-    subgraph Track4_Chatbot [Track 4: AI Chatbot]
+    subgraph Feature4_Chatbot [Feature 4: Chatbot]
         UI_Chat[Chat Widget]
         CloudFunc[Cloud Function]
     end
@@ -59,36 +59,36 @@ graph TD
 
 ## Integration Points
 
-1.  **Designer ↔ Transmission**:
-    *   The **Designer** (Track 2) creates the buttons.
-    *   When clicked, these buttons trigger the **Transmission** logic (Track 3) by referencing the `CommandID` stored by the **Decoder** (Track 1).
+1.  **Designer ↔ Remote**:
+    *   The **Designer** creates the buttons.
+    *   When clicked, these buttons trigger the **Remote** logic by referencing the `CommandID` stored by the **Learning** feature.
 
-2.  **Decoder ↔ Designer**:
-    *   The **Decoder** (Track 1) populates the database with available commands.
-    *   The **Designer** (Track 2) reads this list so users can assign "Volume Up" to a button.
+2.  **Learning ↔ Designer**:
+    *   The **Learning** feature populates the database with available commands.
+    *   The **Designer** reads this list so users can assign "Volume Up" to a button.
 
 3.  **Chatbot ↔ System**:
-    *   The **Chatbot** (Track 4) is an independent overlay but reads the `KnowledgeBase` which documents the system's hardware and software behavior.
+    *   The **Chatbot** is an independent overlay but reads the `KnowledgeBase` which documents the system's hardware and software behavior.
 
 ## Data Flow Summary
 
-| Action | Track Needed | Flow |
+| Action | Feature | Flow |
 | :--- | :--- | :--- |
-| **User Creates Remote** | Track 2 (Designer) | UI Creates Layout → Save to DB |
-| **User Teaches Remote** | Track 1 (Decoder) | UI Sets Mode → ESP Reads IR → Save to DB |
-| **User Presses Button** | Track 3 (Transmission) | UI Writes to Queue → ESP Reads Queue → ESP Blinks LED |
-| **User Asks Help** | Track 4 (Chatbot) | UI calls Cloud Function → AI Answers |
+| **User Creates Remote** | Designer | UI Creates Layout → Save to DB |
+| **User Teaches Remote** | Learning | UI Sets Mode → ESP Reads IR → Save to DB |
+| **User Presses Button** | Remote | UI Writes to Queue → ESP Reads Queue → ESP Blinks LED |
+| **User Asks Help** | Chatbot | UI calls Cloud Function → AI Answers |
 
 ## Navigation Structure
 
 The web app uses a **bottom tab bar** (mobile) / **sidebar** (desktop) for primary navigation.
 
-| Route | Screen | Track |
+| Route | Screen | Feature |
 |-------|--------|-------|
-| `/` | Remote Control | Transmission |
+| `/` | Remote Control | Remote |
 | `/devices` | Device List | Designer |
 | `/designer/:id` | Layout Editor | Designer |
-| `/designer/:id/learn` | Learning Modal | Decoder |
+| `/designer/:id/learn` | Learning Modal | Learning |
 
 The **Chatbot Widget** is a floating button available on all screens.
 
