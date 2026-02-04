@@ -6,11 +6,6 @@
 #include <Firebase_ESP_Client.h>
 #include "receiver/IProtocolDecoder.h"
 
-// Firebase token generation helper
-#include "addons/TokenHelper.h"
-// Firebase Realtime Database payload printer
-#include "addons/RTDBHelper.h"
-
 enum class FirebaseState {
     DISCONNECTED,
     WIFI_CONNECTING,

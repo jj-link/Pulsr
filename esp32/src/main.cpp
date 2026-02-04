@@ -1,58 +1,188 @@
 /**
  * Pulsr - ESP32 IR Controller Firmware (Production)
  * 
- * This firmware implements a loosely-coupled architecture with dependency injection.
- * For hardware testing, see src/hardware_tests/ir_decoder_test.cpp
+ * This firmware implements a cloud-connected IR controller with:
+ * - IR signal learning and decoding
+ * - Firestore integration for command storage
+ * - Real-time learning mode control from web UI
  * 
  * Architecture:
  * - Uses interface abstractions for testability
- * - Follows SOLID principles
- * - Supports TDD with mock implementations
+ * - Dependency injection for loose coupling
+ * - Callback-based event system
  */
 
 #include <Arduino.h>
+#include <Adafruit_NeoPixel.h>
 #include "config.h"
-#include "receiver/ISignalCapture.h"
-#include "receiver/IProtocolDecoder.h"
-#include "utils/IStatusIndicator.h"
-#include "transmitter/IIRTransmitter.h"
+#include "receiver/ESP32SignalCapture.h"
+#include "receiver/IRLibProtocolDecoder.h"
+#include "receiver/LearningStateMachine.h"
+#include "utils/FirebaseManager.h"
 
-// TODO: Implement concrete classes
-// - ESP32SignalCapture : ISignalCapture
-// - IRLibProtocolDecoder : IProtocolDecoder
-// - NeoPixelIndicator : IStatusIndicator
-// - ESP32IRTransmitter : IIRTransmitter
+// Firebase helper includes (must be after FirebaseManager)
+#include "addons/TokenHelper.h"
+#include "addons/RTDBHelper.h"
 
-// Dependency injection - interfaces will be assigned concrete implementations
-ISignalCapture* signalCapture = nullptr;
-IProtocolDecoder* protocolDecoder = nullptr;
-IStatusIndicator* statusIndicator = nullptr;
-IIRTransmitter* irTransmitter = nullptr;
+// ============== Hardware Instances ==============
+ESP32SignalCapture signalCapture(IR_RECEIVE_PIN);
+IRLibProtocolDecoder protocolDecoder;
+LearningStateMachine learningStateMachine(&signalCapture, &protocolDecoder, LEARNING_TIMEOUT_MS);
+FirebaseManager firebaseManager(
+    WIFI_SSID,
+    WIFI_PASSWORD,
+    FIREBASE_API_KEY,
+    FIREBASE_PROJECT_ID,
+    FIREBASE_USER_EMAIL,
+    FIREBASE_USER_PASSWORD,
+    DEVICE_ID
+);
 
-// State management
-enum DeviceState {
-    STATE_IDLE,
-    STATE_LEARNING,
-    STATE_SENDING
-};
+Adafruit_NeoPixel statusLED(NEOPIXEL_COUNT, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
-DeviceState currentState = STATE_IDLE;
+// ============== Color Definitions ==============
+#define COLOR_OFF           statusLED.Color(0, 0, 0)
+#define COLOR_CONNECTING    statusLED.Color(20, 20, 0)   // Yellow = connecting
+#define COLOR_READY         statusLED.Color(0, 20, 0)    // Dim green = ready
+#define COLOR_LEARNING      statusLED.Color(0, 0, 100)   // Blue = listening
+#define COLOR_SUCCESS       statusLED.Color(0, 100, 0)   // Green = success
+#define COLOR_ERROR         statusLED.Color(100, 0, 0)   // Red = error
+#define COLOR_TIMEOUT       statusLED.Color(100, 50, 0)  // Orange = timeout
+
+// ============== Callback Handlers ==============
+
+void onLearningStateChanged(LearningState state) {
+    Serial.print("[Learning] State changed: ");
+    
+    switch (state) {
+        case LearningState::IDLE:
+            Serial.println("IDLE");
+            statusLED.setPixelColor(0, COLOR_READY);
+            statusLED.show();
+            // Update Firestore to indicate learning complete
+            firebaseManager.setLearningMode(false);
+            break;
+            
+        case LearningState::LEARNING:
+            Serial.println("LEARNING - Waiting for IR signal...");
+            statusLED.setPixelColor(0, COLOR_LEARNING);
+            statusLED.show();
+            break;
+            
+        case LearningState::CAPTURED:
+            Serial.println("CAPTURED - Signal received!");
+            statusLED.setPixelColor(0, COLOR_SUCCESS);
+            statusLED.show();
+            break;
+            
+        case LearningState::TIMEOUT:
+            Serial.println("TIMEOUT - No signal received");
+            statusLED.setPixelColor(0, COLOR_TIMEOUT);
+            statusLED.show();
+            break;
+    }
+}
+
+void onSignalCaptured(const DecodedSignal& signal) {
+    Serial.println("========== CAPTURED IR SIGNAL ==========");
+    Serial.print("Protocol: ");
+    Serial.println(signal.protocol);
+    Serial.print("Address: 0x");
+    Serial.println(signal.address, HEX);
+    Serial.print("Command: 0x");
+    Serial.println(signal.command, HEX);
+    Serial.print("Value: 0x");
+    Serial.println((unsigned long)signal.value, HEX);
+    Serial.print("Bits: ");
+    Serial.println(signal.bits);
+    Serial.print("Known Protocol: ");
+    Serial.println(signal.isKnownProtocol ? "Yes" : "No");
+    Serial.println("=========================================");
+    
+    // Upload to Firestore
+    String commandName = String("cmd_") + String(millis());
+    if (firebaseManager.uploadSignal(signal, commandName)) {
+        Serial.println("[Main] Signal uploaded to Firestore successfully!");
+    } else {
+        Serial.println("[Main] Failed to upload signal to Firestore");
+    }
+}
+
+void onFirebaseLearningModeChanged(bool isLearning) {
+    Serial.print("[Firebase] Learning mode changed: ");
+    Serial.println(isLearning ? "ON" : "OFF");
+    
+    if (isLearning) {
+        learningStateMachine.startLearning();
+    } else {
+        learningStateMachine.stopLearning();
+    }
+}
+
+// ============== Setup ==============
 
 void setup() {
     Serial.begin(115200);
-    Serial.println("\n[Pulsr Production] Starting up...");
-    Serial.println("[Pulsr] NOTE: Concrete implementations not yet created.");
-    Serial.println("[Pulsr] Use 'pio run -e ir_receiver_test' to run hardware test script.");
+    Serial.println("\n[Pulsr] Starting up...");
+    Serial.print("[Pulsr] Device ID: ");
+    Serial.println(DEVICE_ID);
     
-    // TODO: Instantiate concrete implementations and inject dependencies
-    // signalCapture = new ESP32SignalCapture(IR_RECEIVE_PIN);
-    // protocolDecoder = new IRLibProtocolDecoder();
-    // statusIndicator = new NeoPixelIndicator(NEOPIXEL_PIN, NEOPIXEL_COUNT);
-    // irTransmitter = new ESP32IRTransmitter(IR_SEND_PIN);
+    // Initialize NeoPixel
+    statusLED.begin();
+    statusLED.setBrightness(NEOPIXEL_BRIGHTNESS);
+    statusLED.setPixelColor(0, COLOR_CONNECTING);
+    statusLED.show();
+    
+    // Initialize IR receiver
+    signalCapture.enable();
+    Serial.print("[Pulsr] IR Receiver initialized on GPIO ");
+    Serial.println(IR_RECEIVE_PIN);
+    
+    // Set up callbacks
+    learningStateMachine.onStateChange(onLearningStateChanged);
+    learningStateMachine.onSignalCapture(onSignalCaptured);
+    firebaseManager.onLearningStateChange(onFirebaseLearningModeChanged);
+    
+    // Connect to Firebase
+    Serial.println("[Pulsr] Connecting to Firebase...");
+    if (firebaseManager.begin()) {
+        Serial.println("[Pulsr] Firebase connection initiated");
+    } else {
+        Serial.println("[Pulsr] Firebase connection failed - will retry");
+        statusLED.setPixelColor(0, COLOR_ERROR);
+        statusLED.show();
+    }
+    
+    Serial.println("[Pulsr] Initialization complete!");
 }
 
+// ============== Main Loop ==============
+
 void loop() {
-    // Production firmware loop will be implemented here
-    // For now, just indicate this is a placeholder
-    delay(1000);
+    // Update Firebase connection and poll for learning mode changes
+    firebaseManager.update();
+    
+    // Update learning state machine (handles timeouts and signal capture)
+    learningStateMachine.update();
+    
+    // Update status LED based on Firebase state
+    static FirebaseState lastFirebaseState = FirebaseState::DISCONNECTED;
+    FirebaseState currentFirebaseState = firebaseManager.getState();
+    
+    if (currentFirebaseState != lastFirebaseState) {
+        if (currentFirebaseState == FirebaseState::FIREBASE_READY) {
+            statusLED.setPixelColor(0, COLOR_READY);
+            statusLED.show();
+        } else if (currentFirebaseState == FirebaseState::ERROR_WIFI_FAILED ||
+                   currentFirebaseState == FirebaseState::ERROR_AUTH_FAILED) {
+            statusLED.setPixelColor(0, COLOR_ERROR);
+            statusLED.show();
+        } else {
+            statusLED.setPixelColor(0, COLOR_CONNECTING);
+            statusLED.show();
+        }
+        lastFirebaseState = currentFirebaseState;
+    }
+    
+    delay(10);
 }

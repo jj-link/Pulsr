@@ -30,7 +30,7 @@
   - [x] State transition logic (IDLE → LEARNING → CAPTURED/TIMEOUT → IDLE)
   - [x] Configurable timeout (default 30 seconds)
   - [x] Callback system for state changes and signal capture
-  - [ ] Firestore state listener integration (requires Firebase SDK)
+  - [x] Integrated with FirebaseManager via callbacks
 
 ### Firebase Integration
 - [x] Firebase ESP32 SDK setup (Firebase Arduino Client Library v4.4.14)
@@ -39,8 +39,9 @@
 - [x] Upload commands to Firestore (`devices/{deviceId}/commands/{commandId}`)
 - [x] Poll for `isLearning` state changes (2-second interval with callbacks)
 - [x] FirebaseManager class with state management
-- [ ] Integration with LearningStateMachine callbacks
-- [ ] Production testing with real Firebase project
+- [x] Integration with LearningStateMachine callbacks in main.cpp
+- [x] Production firmware complete and verified (17.1% Flash, 14.8% RAM)
+- [ ] Hardware testing with real Firebase project and credentials
 
 ## Blockers
 

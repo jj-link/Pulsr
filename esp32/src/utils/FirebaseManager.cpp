@@ -37,9 +37,6 @@ bool FirebaseManager::begin() {
     auth.user.email = userEmail;
     auth.user.password = userPassword;
     
-    // Set token status callback
-    config.token_status_callback = tokenStatusCallback;
-    
     // Initialize Firebase
     Firebase.begin(&config, &auth);
     Firebase.reconnectWiFi(true);
