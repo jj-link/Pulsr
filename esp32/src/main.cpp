@@ -1,7 +1,7 @@
 /**
- * Pulsr - ESP32 IR Controller Production Firmware
+ * Pulsr - ESP32 IR Controller Production Embedded Software
  * 
- * This firmware implements a cloud-connected IR controller with:
+ * This embedded software implements a cloud-connected IR controller with:
  * - IR signal learning and decoding (receiver)
  * - IR signal transmission from Firestore queue (transmitter)
  * - Firestore integration for command storage and queue processing
