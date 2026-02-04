@@ -52,13 +52,137 @@ Display transmission queue status.
 - Success feedback appears
 - Failed transmission shows retry option
 
-## Dependencies
+## Tech Stack
 
-- React
-- Firebase SDK
-- UI library (shadcn/ui, Lucide icons)
-- TailwindCSS
+- **React 18** with TypeScript (strict mode)
+- **Firebase SDK** - Firestore real-time listeners
+- **shadcn/ui** - Accessible UI components (Radix UI primitives)
+- **Lucide React** - Icons
+- **TailwindCSS** - Styling
+- **Vitest** - Unit tests
+- **React Testing Library** - Component tests
+- **Playwright** - E2E tests
 
-## Integration
+## Implementation Pattern
 
-See `docs/contracts/transmission.md` for Firestore data model and integration flow.
+### Repository Pattern
+
+All Firestore interactions use repository interfaces:
+
+```typescript
+interface IQueueRepository {
+  enqueueCommand(deviceId: string, commandId: string): Promise<string>
+  listenToQueueItem(
+    queueItemId: string,
+    callback: (status: QueueStatus) => void
+  ): () => void
+  getRecentTransmissions(deviceId: string, limit: number): Promise<QueueItem[]>
+}
+
+interface ILayoutRepository {
+  getLayout(deviceId: string): Promise<Layout>
+  saveLayout(deviceId: string, layout: Layout): Promise<void>
+}
+```
+
+### Custom Hooks
+
+Components use hooks that wrap repositories:
+
+```typescript
+// useTransmission.ts
+function useTransmission(deviceId: string) {
+  const queueRepo = useQueueRepository()
+  const [status, setStatus] = useState<Record<string, QueueStatus>>({})
+  
+  const pressButton = useCallback(async (commandId: string) => {
+    const queueItemId = await queueRepo.enqueueCommand(deviceId, commandId)
+    
+    // Optimistic update
+    setStatus(prev => ({ ...prev, [commandId]: 'pending' }))
+    
+    // Listen for status updates
+    return queueRepo.listenToQueueItem(queueItemId, (newStatus) => {
+      setStatus(prev => ({ ...prev, [commandId]: newStatus }))
+    })
+  }, [deviceId, queueRepo])
+  
+  return { pressButton, status }
+}
+```
+
+### Mock-First Development
+
+Build with `InMemoryQueueRepository` before ESP32 ready:
+
+```typescript
+class InMemoryQueueRepository implements IQueueRepository {
+  private queue = new Map<string, QueueItem>()
+  
+  async enqueueCommand(deviceId: string, commandId: string) {
+    const id = crypto.randomUUID()
+    this.queue.set(id, {
+      id,
+      deviceId,
+      commandId,
+      status: 'pending',
+      createdAt: new Date()
+    })
+    
+    // Simulate ESP32 processing
+    setTimeout(() => {
+      const item = this.queue.get(id)!
+      item.status = 'sent'
+      this.queue.set(id, item)
+    }, 1000)
+    
+    return id
+  }
+}
+```
+
+## Firestore Schema
+
+```
+devices/{deviceId}
+  - name: string
+  - layout: object (button positions, icons, colors)
+  
+  queue/{queueItemId}
+    - commandId: string
+    - status: 'pending' | 'sent' | 'failed'
+    - createdAt: timestamp
+    - processedAt: timestamp (optional)
+    - error: string (optional)
+```
+
+## File Structure
+
+```
+features/transmission/
+├── components/
+│   ├── RemoteButton.tsx
+│   ├── RemoteGrid.tsx
+│   ├── QueueMonitor.tsx
+│   └── index.ts
+├── hooks/
+│   ├── useTransmission.ts
+│   ├── useQueue.ts
+│   ├── useLayout.ts
+│   └── index.ts
+├── repositories/
+│   ├── IQueueRepository.ts
+│   ├── ILayoutRepository.ts
+│   ├── FirestoreQueueRepository.ts
+│   ├── FirestoreLayoutRepository.ts
+│   ├── InMemoryQueueRepository.ts
+│   ├── InMemoryLayoutRepository.ts
+│   └── index.ts
+├── types/
+│   └── index.ts
+└── __tests__/
+    ├── RemoteButton.test.tsx
+    ├── RemoteGrid.test.tsx
+    ├── useTransmission.test.ts
+    └── repositories.test.ts
+```

@@ -6,6 +6,8 @@
 
 The system revolves around **Firebase** as the central message bus. The Web App and ESP32 never communicate directly; they synchronize state via Firestore.
 
+**Important:** The ESP32 device does **NOT** serve the web application. The React web app is hosted on **Firebase Hosting** as static files. The ESP32's sole responsibility is IR signal processing (receiving and transmitting). All web UI ↔ ESP32 communication happens asynchronously through Firestore.
+
 ```mermaid
 graph TD
     %% Subsystems
@@ -177,19 +179,37 @@ esp32/
 └── platformio.ini
 
 web/
-└── features/
-    ├── decoder/
-    │   ├── plan.md         # Design, Firestore schema, task list
-    │   └── progress.md     # Implementation checklist
-    ├── transmission/
-    │   ├── plan.md
-    │   └── progress.md
-    ├── designer/
-    │   ├── plan.md
-    │   └── progress.md
-    └── chatbot/
-        ├── plan.md
-        └── progress.md
+├── ARCHITECTURE.md         # Web app tech stack and patterns
+├── PROJECT_STRUCTURE.md    # Detailed file organization
+├── package.json            # Dependencies
+├── src/
+│   └── features/
+│       ├── decoder/
+│       │   ├── plan.md         # Design, Firestore schema, task list
+│       │   ├── progress.md     # Implementation checklist
+│       │   ├── components/
+│       │   ├── hooks/
+│       │   ├── repositories/
+│       │   └── __tests__/
+│       ├── transmission/
+│       │   ├── plan.md
+│       │   ├── progress.md
+│       │   └── ... (same structure)
+│       ├── designer/
+│       │   ├── plan.md
+│       │   ├── progress.md
+│       │   └── ... (same structure)
+│       ├── chatbot/
+│       │   ├── plan.md
+│       │   ├── progress.md
+│       │   └── ... (same structure)
+│       └── core/
+│           ├── firebase/
+│           ├── ui/
+│           ├── navigation/
+│           └── types/
+└── tests/
+    └── e2e/
 ```
 
 ### Organization Rationale
