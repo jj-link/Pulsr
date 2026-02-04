@@ -1,9 +1,10 @@
 /**
- * Pulsr - ESP32 IR Controller Firmware (Production)
+ * Pulsr - ESP32 IR Controller Production Firmware
  * 
  * This firmware implements a cloud-connected IR controller with:
- * - IR signal learning and decoding
- * - Firestore integration for command storage
+ * - IR signal learning and decoding (receiver)
+ * - IR signal transmission from Firestore queue (transmitter)
+ * - Firestore integration for command storage and queue processing
  * - Real-time learning mode control from web UI
  * 
  * Architecture:
@@ -15,9 +16,18 @@
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 #include "config.h"
+
+// Receiver components
 #include "receiver/ESP32SignalCapture.h"
 #include "receiver/IRLibProtocolDecoder.h"
 #include "receiver/LearningStateMachine.h"
+
+// Transmitter components
+#include "transmitter/ESP32IRTransmitter.h"
+#include "transmitter/IRLibProtocolEncoders.h"
+#include "transmitter/QueueProcessor.h"
+
+// Firebase integration
 #include "utils/FirebaseManager.h"
 
 // Firebase helper includes (must be after FirebaseManager)
@@ -25,9 +35,18 @@
 #include "addons/RTDBHelper.h"
 
 // ============== Hardware Instances ==============
+
+// Receiver subsystem
 ESP32SignalCapture signalCapture(IR_RECEIVE_PIN);
 IRLibProtocolDecoder protocolDecoder;
 LearningStateMachine learningStateMachine(&signalCapture, &protocolDecoder, LEARNING_TIMEOUT_MS);
+
+// Transmitter subsystem
+ESP32IRTransmitter irTransmitter(IR_SEND_PIN, false);  // GPIO 4, not inverted
+IRLibProtocolEncoders protocolEncoder;
+FirebaseData queueFbdo;  // Separate FirebaseData instance for queue polling
+
+// Firebase integration
 FirebaseManager firebaseManager(
     WIFI_SSID,
     WIFI_PASSWORD,
@@ -38,6 +57,10 @@ FirebaseManager firebaseManager(
     DEVICE_ID
 );
 
+// Queue processor (initialized in setup after Firebase is ready)
+QueueProcessor* queueProcessor = nullptr;
+
+// Status LED
 Adafruit_NeoPixel statusLED(NEOPIXEL_COUNT, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
 // ============== Color Definitions ==============
@@ -138,6 +161,11 @@ void setup() {
     Serial.print("[Pulsr] IR Receiver initialized on GPIO ");
     Serial.println(IR_RECEIVE_PIN);
     
+    // Initialize IR transmitter
+    irTransmitter.begin();
+    Serial.print("[Pulsr] IR Transmitter initialized on GPIO ");
+    Serial.println(IR_SEND_PIN);
+    
     // Set up callbacks
     learningStateMachine.onStateChange(onLearningStateChanged);
     learningStateMachine.onSignalCapture(onSignalCaptured);
@@ -147,6 +175,17 @@ void setup() {
     Serial.println("[Pulsr] Connecting to Firebase...");
     if (firebaseManager.begin()) {
         Serial.println("[Pulsr] Firebase connection initiated");
+        
+        // Initialize queue processor after Firebase is ready
+        queueProcessor = new QueueProcessor(
+            &queueFbdo,
+            FIREBASE_PROJECT_ID,
+            DEVICE_ID,
+            &protocolEncoder,
+            &irTransmitter,
+            100  // 100ms poll interval
+        );
+        Serial.println("[Pulsr] Queue processor initialized");
     } else {
         Serial.println("[Pulsr] Firebase connection failed - will retry");
         statusLED.setPixelColor(0, COLOR_ERROR);
@@ -164,6 +203,11 @@ void loop() {
     
     // Update learning state machine (handles timeouts and signal capture)
     learningStateMachine.update();
+    
+    // Update queue processor (polls Firestore queue and transmits commands)
+    if (queueProcessor != nullptr && firebaseManager.getState() == FirebaseState::FIREBASE_READY) {
+        queueProcessor->update();
+    }
     
     // Update status LED based on Firebase state
     static FirebaseState lastFirebaseState = FirebaseState::DISCONNECTED;
