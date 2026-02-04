@@ -1,15 +1,11 @@
+import { RouterProvider } from 'react-router-dom'
 import { FirebaseProvider } from '@/features/core/firebase'
+import { router } from '@/features/core/navigation/router'
 
 function App() {
   return (
     <FirebaseProvider>
-      <div>
-        <h1>Pulsr</h1>
-        <p>Firebase connection test</p>
-        <p style={{ fontSize: '0.9em', color: '#888' }}>
-          Check browser console for Firebase initialization message
-        </p>
-      </div>
+      <RouterProvider router={router} />
     </FirebaseProvider>
   )
 }
