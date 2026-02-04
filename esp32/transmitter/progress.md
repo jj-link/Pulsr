@@ -26,21 +26,24 @@
   - [x] Carrier frequency configuration (38kHz)
   - [x] Production build verified (17.1% Flash, 14.8% RAM)
   - [ ] Hardware tested via `ir_transmitter_test`
-- [ ] **QueueProcessor**
-  - [ ] Firestore polling logic (~100ms)
-  - [ ] FIFO queue ordering
-  - [ ] Status updates (PENDING → SENT/FAILED)
-  - [ ] Retry logic with backoff
+- [x] **QueueProcessor**
+  - [x] Firestore polling logic (~100ms)
+  - [x] FIFO queue ordering
+  - [x] Status updates (PENDING → PROCESSING → SENT/FAILED)
+  - [x] Command loading from Firestore
+  - [x] Encoding and transmission integration
+  - [x] Production build verified (17.1% Flash, 14.8% RAM)
+  - [ ] Retry logic with backoff (deferred)
 
 ### Firebase Integration
-- [ ] Queue collection polling
-- [ ] Command reference loading
-- [ ] Status update writes
-- [ ] Latency optimization (<500ms)
+- [x] Queue collection polling
+- [x] Command reference loading via commandId
+- [x] Status update writes with timestamps
+- [ ] Latency optimization testing (<500ms target)
 
 ## Blockers
 
-**Dependency:** Requires Decoder track to complete Firebase integration - needs learned commands in database to transmit.
+None - core transmitter implementation complete.
 
 ## Next Steps
 
