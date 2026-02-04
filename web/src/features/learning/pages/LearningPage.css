@@ -1,0 +1,85 @@
+.learning-page {
+  max-width: 1200px;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-header h2 {
+  margin: 0 0 0.5rem 0;
+}
+
+.page-header p {
+  margin: 0;
+  color: #888;
+}
+
+.device-section {
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.learning-controls {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn-learning,
+.btn-stop-learning {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-learning {
+  background-color: #646cff;
+  color: white;
+  flex: 1;
+}
+
+.btn-learning:hover:not(:disabled) {
+  background-color: #535bf2;
+}
+
+.btn-learning:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  animation: pulse-btn 2s infinite;
+}
+
+@keyframes pulse-btn {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.btn-stop-learning {
+  background-color: #f44336;
+  color: white;
+}
+
+.btn-stop-learning:hover {
+  background-color: #d32f2f;
+}
+
+@media (prefers-color-scheme: light) {
+  .page-header p {
+    color: #666;
+  }
+  
+  .device-section {
+    background-color: #f9f9f9;
+    border-color: #e0e0e0;
+  }
+}
