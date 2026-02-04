@@ -31,11 +31,11 @@ DecodedSignal IRLibProtocolDecoder::decodeNEC(decode_results* raw) {
     signal.rawLength = 0;
     
     // NEC format: address(8) ~address(8) command(8) ~command(8)
-    // Extract address from bits 24-31
-    signal.address = (raw->value >> 24) & 0xFF;
+    // Extract address from bits 0-7
+    signal.address = raw->value & 0xFF;
     
-    // Extract command from bits 8-15
-    signal.command = (raw->value >> 8) & 0xFF;
+    // Extract command from bits 16-23
+    signal.command = (raw->value >> 16) & 0xFF;
     
     return signal;
 }
@@ -49,9 +49,12 @@ DecodedSignal IRLibProtocolDecoder::decodeSamsung(decode_results* raw) {
     signal.rawTimings = nullptr;
     signal.rawLength = 0;
     
-    // Samsung format is similar to NEC: address(8) ~address(8) command(8) ~command(8)
-    signal.address = (raw->value >> 24) & 0xFF;
-    signal.command = (raw->value >> 8) & 0xFF;
+    // Samsung format: address(16 bits) | command(8) | ~command(8)
+    // Extract 16-bit address from bits 0-15
+    signal.address = raw->value & 0xFFFF;
+    
+    // Extract command from bits 16-23
+    signal.command = (raw->value >> 16) & 0xFF;
     
     return signal;
 }

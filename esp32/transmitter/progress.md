@@ -1,7 +1,7 @@
 # Transmitter - ESP32 Status
 
-**Last Updated:** 2026-02-02  
-**Phase:** Not Started
+**Last Updated:** 2026-02-04  
+**Phase:** Core Classes Implementation (TDD)
 
 ## Progress
 
@@ -10,16 +10,17 @@
 - [ ] Hardware test script (`ir_transmitter_test`)
 
 ### Testing Infrastructure
-- [ ] Unity testing framework configured
-- [ ] Protocol encoder tests
+- [x] Native testing framework configured (shared with receiver)
+- [x] Protocol encoder tests with round-trip symmetry validation
 - [ ] Mock transmitter for integration tests
 
 ### Core Classes (TDD)
-- [ ] **ProtocolEncoders**
-  - [ ] NEC encoder + tests
-  - [ ] Samsung encoder + tests
-  - [ ] Sony encoder + tests
-  - [ ] Round-trip symmetry tests (encode → decode → verify)
+- [x] **ProtocolEncoders** (IRLibProtocolEncoders)
+  - [x] NEC encoder + tests
+  - [x] Samsung encoder + tests
+  - [x] Sony encoder + tests
+  - [x] RAW passthrough + tests
+  - [x] Round-trip symmetry tests (encode → decode → verify all passing)
 - [ ] **ESP32IRTransmitter**
   - [ ] IRsend wrapper implementation
   - [ ] Carrier frequency configuration (38kHz)

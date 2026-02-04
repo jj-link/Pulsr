@@ -13,12 +13,11 @@ void tearDown(void) {
 
 void test_nec_protocol_decodes_tv_power() {
     // Known NEC signal: TV Power (address: 0x00, command: 0x12)
-    // NEC format: address(8) ~address(8) command(8) ~command(8)
-    // Binary: 00000000 11111111 00010010 11101101
-    // Value: 0x00FF12ED
+    // NEC IRremoteESP8266 value format: address | ~address<<8 | command<<16 | ~command<<24
+    // Value: 0x00 | (0xFF << 8) | (0x12 << 16) | (0xED << 24) = 0xED12FF00
     decode_results raw;
     raw.decode_type = NEC;
-    raw.value = 0x00FF12ED;
+    raw.value = 0xED12FF00;
     raw.bits = 32;
     
     IRLibProtocolDecoder decoder;
@@ -32,9 +31,11 @@ void test_nec_protocol_decodes_tv_power() {
 
 void test_nec_protocol_decodes_samsung_tv_volume_up() {
     // Samsung TV Volume Up: address: 0x07, command: 0x02
+    // NEC format: address | ~address<<8 | command<<16 | ~command<<24
+    // Value: 0x07 | (0xF8 << 8) | (0x02 << 16) | (0xFD << 24) = 0xFD02F807
     decode_results raw;
     raw.decode_type = NEC;
-    raw.value = 0x07F802FD;
+    raw.value = 0xFD02F807;
     raw.bits = 32;
     
     IRLibProtocolDecoder decoder;
