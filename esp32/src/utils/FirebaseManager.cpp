@@ -78,11 +78,34 @@ void FirebaseManager::update() {
 }
 
 bool FirebaseManager::connectWiFi() {
-    Serial.print("[WiFi] Connecting to ");
-    Serial.println(wifiSSID);
+    // Set station mode explicitly (required for ESP32-S3)
+    WiFi.mode(WIFI_STA);
+    delay(100);
+    
+    Serial.println("[WiFi] Scanning for networks...");
+    int n = WiFi.scanNetworks();
+    Serial.print("[WiFi] Found ");
+    Serial.print(n);
+    Serial.println(" networks:");
+    for (int i = 0; i < n && i < 10; i++) {
+        Serial.print("  ");
+        Serial.print(i + 1);
+        Serial.print(": '");
+        Serial.print(WiFi.SSID(i));
+        Serial.print("' (");
+        Serial.print(WiFi.RSSI(i));
+        Serial.println(" dBm)");
+    }
+    
+    Serial.print("[WiFi] Connecting to: '");
+    Serial.print(wifiSSID);
+    Serial.println("'");
+    Serial.print("[WiFi] Password length: ");
+    Serial.println(strlen(wifiPassword));
     
     state = FirebaseState::WIFI_CONNECTING;
     WiFi.begin(wifiSSID, wifiPassword);
+    WiFi.setTxPower(WIFI_POWER_8_5dBm);  // Reduce TX power to fix auth issues with some routers
     
     unsigned long startAttempt = millis();
     while (WiFi.status() != WL_CONNECTED && millis() - startAttempt < 10000) {
@@ -92,7 +115,9 @@ bool FirebaseManager::connectWiFi() {
     Serial.println();
     
     if (WiFi.status() != WL_CONNECTED) {
-        Serial.println("[WiFi] Connection failed!");
+        Serial.print("[WiFi] Connection failed! Status code: ");
+        Serial.println(WiFi.status());
+        // Status codes: 0=IDLE, 1=NO_SSID_AVAIL, 2=SCAN_COMPLETED, 3=CONNECTED, 4=CONNECT_FAILED, 5=CONNECTION_LOST, 6=DISCONNECTED
         return false;
     }
     
