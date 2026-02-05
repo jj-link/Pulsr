@@ -221,10 +221,36 @@ Industry-standard setup for end users:
 - Requires display for consumer-friendly UX
 
 ### Decision
-- **Developer mode:** Serial output + hardcoded IDs
-- **Consumer mode:** WiFi hotspot or PIN code pairing
+- **Developer mode:** Serial output + hardcoded IDs + temp Firebase creds in config.h
+- **Consumer mode:** WiFi hotspot or PIN code pairing + Firebase Secrets via Cloud Functions
+
+## Security: Firebase Credentials
+
+### Current (Temporary)
+Hardcoded Firebase credentials in `esp32/include/config.h` for testing.
+
+### Phase 3: Firebase Secrets (Production)
+Remove hardcoded credentials, use secure token exchange:
+
+**Implementation:**
+1. Firebase Cloud Functions with environment variables for API key
+2. HTTPS endpoint: `POST /getDeviceToken` with device ID + MAC address
+3. Cloud Function verifies device, returns short-lived Firebase Custom Token
+4. ESP32 uses token to authenticate (no credentials stored)
+5. Token expires after 1 hour, device refreshes via same endpoint
+
+**Security Benefits:**
+- API key never leaves server
+- Revocable tokens per device
+- MAC address validation prevents spoofing
+
+**Files to Create:**
+- `functions/src/deviceAuth.ts` - Cloud Function
+- `functions/.env` - API key secrets (gitignored)
+- Update `FirebaseManager.cpp` to use token endpoint
 
 ## Current Status
 - Web UI: Complete with TDD (33 tests passing)
 - ESP32: Firestore integration ready
-- **Blocker:** Device ID mismatch prevents end-to-end testing
+- WiFi: Working with setTxPower fix
+- **Blocker:** Firebase credentials needed for end-to-end testing
