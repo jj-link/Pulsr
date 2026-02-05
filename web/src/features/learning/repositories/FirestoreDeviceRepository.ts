@@ -9,6 +9,7 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  deleteField,
   onSnapshot,
   Firestore,
 } from 'firebase/firestore'
@@ -69,6 +70,11 @@ export class FirestoreDeviceRepository implements IDeviceRepository {
 
   async setLearningMode(deviceId: string, isLearning: boolean): Promise<void> {
     await this.update(deviceId, { isLearning })
+  }
+
+  async clearPendingSignal(deviceId: string): Promise<void> {
+    const docRef = doc(this.db, this.collectionName, deviceId)
+    await updateDoc(docRef, { pendingSignal: deleteField() })
   }
 
   subscribe(callback: (devices: Device[]) => void): () => void {

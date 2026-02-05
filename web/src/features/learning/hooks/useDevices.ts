@@ -49,6 +49,15 @@ export function useDevices(repository: IDeviceRepository) {
     }
   }
 
+  const clearPendingSignal = async (deviceId: string) => {
+    try {
+      await repository.clearPendingSignal(deviceId)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to clear pending signal')
+      throw err
+    }
+  }
+
   return {
     devices,
     loading,
@@ -56,5 +65,6 @@ export function useDevices(repository: IDeviceRepository) {
     createDevice,
     setLearningMode,
     deleteDevice,
+    clearPendingSignal,
   }
 }

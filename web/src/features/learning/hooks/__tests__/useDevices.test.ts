@@ -54,7 +54,7 @@ describe('useDevices', () => {
       expect(result.current.loading).toBe(false)
     })
 
-    const device = await result.current.createDevice('Kitchen TV', 'user1')
+    const device = await result.current.createDevice('Kitchen TV', 'kitchen-tv-001', 'user1')
 
     expect(device.name).toBe('Kitchen TV')
     expect(device.ownerId).toBe('user1')

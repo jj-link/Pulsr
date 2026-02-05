@@ -8,12 +8,23 @@ export interface IRCommand {
   capturedAt: Date
 }
 
+export interface PendingSignal {
+  protocol: string
+  address: string
+  command: string
+  value: string
+  bits: number
+  isKnownProtocol: boolean
+  capturedAt: Date
+}
+
 export interface Device {
   id: string
   name: string
   isLearning: boolean
   layout?: DeviceLayout
   ownerId: string
+  pendingSignal?: PendingSignal | null
 }
 
 export interface DeviceLayout {

@@ -22,7 +22,7 @@ export class FirestoreCommandRepository implements ICommandRepository {
     const commandsRef = collection(this.db, `devices/${deviceId}/commands`)
     const q = query(commandsRef, orderBy('capturedAt', 'desc'))
     const snapshot = await getDocs(q)
-    return snapshot.docs.map(doc => this.mapDoc(doc.id, doc.data()))
+    return snapshot.docs.map(doc => this.mapDoc(doc.id, doc.data(), deviceId))
   }
 
   async getById(id: string): Promise<IRCommand | null> {
@@ -32,7 +32,7 @@ export class FirestoreCommandRepository implements ICommandRepository {
     const docRef = doc(this.db, `devices/${deviceId}/commands/${commandId}`)
     const snapshot = await getDoc(docRef)
     if (!snapshot.exists()) return null
-    return this.mapDoc(snapshot.id, snapshot.data())
+    return this.mapDoc(snapshot.id, snapshot.data(), deviceId)
   }
 
   async create(command: Omit<IRCommand, 'id' | 'capturedAt'>): Promise<IRCommand> {
@@ -42,7 +42,7 @@ export class FirestoreCommandRepository implements ICommandRepository {
       capturedAt: Timestamp.now(),
     })
     const snapshot = await getDoc(docRef)
-    return this.mapDoc(snapshot.id, snapshot.data()!)
+    return this.mapDoc(snapshot.id, snapshot.data()!, command.deviceId)
   }
 
   async update(id: string, updates: Partial<IRCommand>): Promise<void> {
@@ -66,14 +66,14 @@ export class FirestoreCommandRepository implements ICommandRepository {
     const q = query(commandsRef, orderBy('capturedAt', 'desc'))
     
     return onSnapshot(q, snapshot => {
-      const commands = snapshot.docs.map(doc => this.mapDoc(doc.id, doc.data()))
+      const commands = snapshot.docs.map(doc => this.mapDoc(doc.id, doc.data(), deviceId))
       callback(commands)
     })
   }
 
-  private mapDoc(id: string, data: any): IRCommand {
+  private mapDoc(id: string, data: any, deviceId?: string): IRCommand {
     return {
-      id,
+      id: deviceId ? `${deviceId}/${id}` : id,
       deviceId: data.deviceId,
       name: data.name,
       protocol: data.protocol,

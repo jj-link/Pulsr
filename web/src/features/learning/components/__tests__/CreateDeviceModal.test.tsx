@@ -42,9 +42,10 @@ describe('CreateDeviceModal', () => {
     )
 
     await user.type(screen.getByLabelText(/device name/i), 'Kitchen TV')
+    await user.type(screen.getByLabelText(/device id/i), 'kitchen-tv-001')
     await user.click(screen.getByRole('button', { name: /create/i }))
 
-    expect(mockCreate).toHaveBeenCalledWith('Kitchen TV')
+    expect(mockCreate).toHaveBeenCalledWith('Kitchen TV', 'kitchen-tv-001')
   })
 
   test('does not call onCreate if name is empty', async () => {
@@ -93,8 +94,10 @@ describe('CreateDeviceModal', () => {
       />
     )
 
-    const input = screen.getByLabelText(/device name/i) as HTMLInputElement
-    await user.type(input, 'Living Room TV')
+    const nameInput = screen.getByLabelText(/device name/i) as HTMLInputElement
+    const idInput = screen.getByLabelText(/device id/i) as HTMLInputElement
+    await user.type(nameInput, 'Living Room TV')
+    await user.type(idInput, 'living-room-tv-001')
     await user.click(screen.getByRole('button', { name: /create/i }))
 
     rerender(
@@ -105,6 +108,7 @@ describe('CreateDeviceModal', () => {
       />
     )
 
-    expect(input.value).toBe('')
+    expect(nameInput.value).toBe('')
+    expect(idInput.value).toBe('')
   })
 })

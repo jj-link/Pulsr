@@ -9,7 +9,7 @@ describe('LearningModal', () => {
       <LearningModal
         isOpen={false}
         onClose={() => {}}
-        onComplete={() => {}}
+        onSave={() => {}}
         deviceName="Living Room TV"
       />
     )
@@ -22,7 +22,7 @@ describe('LearningModal', () => {
       <LearningModal
         isOpen={true}
         onClose={() => {}}
-        onComplete={() => {}}
+        onSave={() => {}}
         deviceName="Living Room TV"
       />
     )
@@ -35,7 +35,7 @@ describe('LearningModal', () => {
       <LearningModal
         isOpen={true}
         onClose={() => {}}
-        onComplete={() => {}}
+        onSave={() => {}}
         deviceName="Living Room TV"
       />
     )
@@ -51,7 +51,7 @@ describe('LearningModal', () => {
       <LearningModal
         isOpen={true}
         onClose={mockClose}
-        onComplete={() => {}}
+        onSave={() => {}}
         deviceName="Living Room TV"
       />
     )
@@ -69,7 +69,7 @@ describe('LearningModal', () => {
       <LearningModal
         isOpen={true}
         onClose={mockClose}
-        onComplete={() => {}}
+        onSave={() => {}}
         deviceName="Living Room TV"
       />
     )
@@ -84,7 +84,7 @@ describe('LearningModal', () => {
       <LearningModal
         isOpen={true}
         onClose={() => {}}
-        onComplete={() => {}}
+        onSave={() => {}}
         deviceName="Living Room TV"
       />
     )

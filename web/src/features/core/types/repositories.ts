@@ -16,6 +16,7 @@ export interface IDeviceRepository {
   update(id: string, updates: Partial<Device>): Promise<void>
   delete(id: string): Promise<void>
   setLearningMode(deviceId: string, isLearning: boolean): Promise<void>
+  clearPendingSignal(deviceId: string): Promise<void>
   subscribe(callback: (devices: Device[]) => void): () => void
 }
 

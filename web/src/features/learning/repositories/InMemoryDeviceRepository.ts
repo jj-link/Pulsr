@@ -42,6 +42,10 @@ export class InMemoryDeviceRepository implements IDeviceRepository {
     await this.update(deviceId, { isLearning })
   }
 
+  async clearPendingSignal(deviceId: string): Promise<void> {
+    await this.update(deviceId, { pendingSignal: null })
+  }
+
   subscribe(callback: (devices: Device[]) => void): () => void {
     this.listeners.add(callback)
     return () => {

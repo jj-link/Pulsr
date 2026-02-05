@@ -133,33 +133,31 @@ bool FirebaseManager::uploadSignal(const DecodedSignal& signal, const String& co
         return false;
     }
     
-    // Build Firestore document path
-    String documentPath = getCommandsPath() + "/" + commandName;
+    // Write pendingSignal field on the device document (limited to 1)
+    String documentPath = getDevicePath();
     
-    // Create Firestore document content
+    // Build pendingSignal as a map field on the device document
     FirebaseJson content;
-    content.set("fields/name/stringValue", commandName);
-    content.set("fields/protocol/stringValue", signal.protocol);
-    content.set("fields/address/integerValue", String(signal.address));
-    content.set("fields/command/integerValue", String(signal.command));
-    content.set("fields/value/integerValue", String(signal.value));
-    content.set("fields/bits/integerValue", String(signal.bits));
-    content.set("fields/isKnownProtocol/booleanValue", signal.isKnownProtocol);
+    content.set("fields/pendingSignal/mapValue/fields/protocol/stringValue", signal.protocol);
+    content.set("fields/pendingSignal/mapValue/fields/address/stringValue", String(signal.address));
+    content.set("fields/pendingSignal/mapValue/fields/command/stringValue", String(signal.command));
+    content.set("fields/pendingSignal/mapValue/fields/value/stringValue", String(signal.value));
+    content.set("fields/pendingSignal/mapValue/fields/bits/integerValue", String(signal.bits));
+    content.set("fields/pendingSignal/mapValue/fields/isKnownProtocol/booleanValue", signal.isKnownProtocol);
     
     // Use ISO 8601 timestamp format (required by Firestore REST API)
-    // Format: 2024-01-15T10:30:00Z
     time_t now = time(nullptr);
     struct tm* timeinfo = gmtime(&now);
     char timestamp[30];
     strftime(timestamp, sizeof(timestamp), "%Y-%m-%dT%H:%M:%SZ", timeinfo);
-    content.set("fields/capturedAt/timestampValue", timestamp);
+    content.set("fields/pendingSignal/mapValue/fields/capturedAt/timestampValue", timestamp);
     
-    // Upload to Firestore
-    Serial.print("[Firebase] Uploading signal: ");
+    // Upload to Firestore (patch only the pendingSignal field)
+    Serial.print("[Firebase] Uploading pending signal to: ");
     Serial.println(documentPath);
     
-    if (Firebase.Firestore.createDocument(&fbdo, projectId, "", documentPath.c_str(), content.raw())) {
-        Serial.println("[Firebase] Signal uploaded successfully!");
+    if (Firebase.Firestore.patchDocument(&fbdo, projectId, "", documentPath.c_str(), content.raw(), "pendingSignal")) {
+        Serial.println("[Firebase] Pending signal uploaded successfully!");
         return true;
     } else {
         Serial.print("[Firebase] Upload failed: ");

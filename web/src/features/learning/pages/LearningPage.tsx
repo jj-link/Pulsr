@@ -10,7 +10,7 @@ import './LearningPage.css'
 
 export function LearningPage() {
   const { deviceRepository, commandRepository } = useRepositories()
-  const { devices, setLearningMode, createDevice } = useDevices(deviceRepository)
+  const { devices, setLearningMode, createDevice, clearPendingSignal } = useDevices(deviceRepository)
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null)
   const [showLearningModal, setShowLearningModal] = useState(false)
   const [showCreateDeviceModal, setShowCreateDeviceModal] = useState(false)
@@ -26,6 +26,22 @@ export function LearningPage() {
 
   const handleStopLearning = async () => {
     if (!selectedDeviceId) return
+    await clearPendingSignal(selectedDeviceId)
+    await setLearningMode(selectedDeviceId, false)
+    setShowLearningModal(false)
+  }
+
+  const handleSaveCommand = async (name: string) => {
+    if (!selectedDeviceId || !selectedDevice?.pendingSignal) return
+    const signal = selectedDevice.pendingSignal
+    await commandRepository.create({
+      deviceId: selectedDeviceId,
+      name,
+      protocol: signal.protocol,
+      address: signal.address,
+      command: signal.command,
+    })
+    await clearPendingSignal(selectedDeviceId)
     await setLearningMode(selectedDeviceId, false)
     setShowLearningModal(false)
   }
@@ -76,8 +92,9 @@ export function LearningPage() {
       <LearningModal
         isOpen={showLearningModal}
         onClose={handleStopLearning}
-        onComplete={handleStopLearning}
+        onSave={handleSaveCommand}
         deviceName={selectedDevice?.name || ''}
+        pendingSignal={selectedDevice?.pendingSignal}
       />
 
       <CreateDeviceModal
