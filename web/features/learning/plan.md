@@ -182,5 +182,49 @@ features/learning/
     ├── LearningModal.test.tsx
     ├── CommandList.test.tsx
     ├── useCommands.test.ts
-    └── repositories.test.ts
-```
+## Device Pairing Strategy
+
+### Problem
+Web app and ESP32 use different device IDs, preventing communication.
+
+### Solutions
+
+#### Phase 1: Hardcoded Test (Immediate)
+For quick testing with matching IDs:
+1. Manually set device ID in both web app and ESP32 config.h
+2. Verify learning mode works end-to-end
+3. Confirm IR signal capture and display
+
+**Purpose:** Validate hardware/software integration before implementing pairing.
+
+#### Phase 2: WiFi Hotspot Pairing (Consumer UX)
+Industry-standard setup for end users:
+
+**Flow:**
+1. ESP32 boots in setup mode → Creates WiFi hotspot "Pulsr-Setup"
+2. User connects phone to hotspot
+3. Opens browser to 192.168.4.1
+4. Web page displays: pairing code + WiFi config form
+5. User enters home WiFi credentials
+6. ESP32 connects, gets device ID assignment
+7. Stores ID in NVS, reboots to normal mode
+
+**Implementation:**
+- ESP32: AP mode + DNS server + HTTP server (200-300 lines)
+- Web app: Add "Pair New Device" page
+- Firestore: Link MAC address to device ID
+
+**Alternative: PIN Code Pairing** (Simpler hardware)
+- ESP32 displays 6-digit code via LED pattern or serial
+- User enters code when creating device
+- Code links MAC to device ID
+- Requires display for consumer-friendly UX
+
+### Decision
+- **Developer mode:** Serial output + hardcoded IDs
+- **Consumer mode:** WiFi hotspot or PIN code pairing
+
+## Current Status
+- Web UI: Complete with TDD (33 tests passing)
+- ESP32: Firestore integration ready
+- **Blocker:** Device ID mismatch prevents end-to-end testing
