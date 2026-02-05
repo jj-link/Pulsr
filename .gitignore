@@ -22,3 +22,6 @@ dist/
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
+
+# ESP32 Config (contains credentials)
+esp32/include/config.h
