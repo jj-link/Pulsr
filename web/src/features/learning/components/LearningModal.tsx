@@ -12,7 +12,7 @@ export function LearningModal({ isOpen, onClose, deviceName }: LearningModalProp
     <div onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()}>
         <div>
-          <h3>Learning Mode</h3>
+          <h3>Learning Mode - {deviceName}</h3>
           <button onClick={onClose}>×</button>
         </div>
         
@@ -20,7 +20,7 @@ export function LearningModal({ isOpen, onClose, deviceName }: LearningModalProp
           <div>
             <p>Waiting for IR signal...</p>
           </div>
-          <p>Point your remote at {deviceName} and press a button</p>
+          <p>Point your remote at the Pulsr receiver and press a button</p>
         </div>
         
         <div>

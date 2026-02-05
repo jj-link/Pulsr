@@ -14,44 +14,20 @@ service cloud.firestore {
     
     // Devices collection
     match /devices/{deviceId} {
-      // Anyone authenticated can read devices
-      allow read: if isAuthenticated();
-      
-      // Only the owner can write to their device
-      allow create: if isAuthenticated() 
-        && request.resource.data.ownerId == request.auth.uid;
-      
-      allow update, delete: if isAuthenticated() 
-        && resource.data.ownerId == request.auth.uid;
+      // TEMPORARY: Allow all access for development (no auth required)
+      // TODO: Re-enable authentication before production
+      allow read, write: if true;
       
       // Commands subcollection
       match /commands/{commandId} {
-        // Anyone authenticated can read commands
-        allow read: if isAuthenticated();
-        
-        // Authenticated users can create commands (for learning mode)
-        // ESP32 will also need write access (via service account)
-        allow create: if isAuthenticated();
-        
-        // Only device owner can update/delete commands
-        allow update, delete: if isAuthenticated() 
-          && get(/databases/$(database)/documents/devices/$(deviceId)).data.ownerId == request.auth.uid;
+        // TEMPORARY: Allow all access for development
+        allow read, write: if true;
       }
       
       // Queue subcollection
       match /queue/{queueId} {
-        // Anyone authenticated can read their device's queue
-        allow read: if isAuthenticated();
-        
-        // Authenticated users can enqueue commands
-        allow create: if isAuthenticated();
-        
-        // ESP32 (via service account) will update status
-        // Users can also update to cancel
-        allow update: if isAuthenticated();
-        
-        // Allow deletion after processing (cleanup)
-        allow delete: if isAuthenticated();
+        // TEMPORARY: Allow all access for development
+        allow read, write: if true;
       }
     }
     

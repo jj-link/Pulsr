@@ -5,6 +5,7 @@ import {
   doc,
   getDocs,
   getDoc,
+  setDoc,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -39,12 +40,21 @@ export class FirestoreDeviceRepository implements IDeviceRepository {
     } as Device
   }
 
-  async create(device: Omit<Device, 'id'>): Promise<Device> {
-    const docRef = await addDoc(collection(this.db, this.collectionName), device)
+  async create(device: Omit<Device, 'id'> & { id?: string }): Promise<Device> {
+    let docRef
+    if (device.id) {
+      // Use provided custom ID
+      docRef = doc(this.db, this.collectionName, device.id)
+      const { id, ...data } = device
+      await setDoc(docRef, data)
+    } else {
+      // Auto-generate ID
+      docRef = await addDoc(collection(this.db, this.collectionName), device)
+    }
     return {
       id: docRef.id,
       ...device,
-    }
+    } as Device
   }
 
   async update(id: string, updates: Partial<Device>): Promise<void> {

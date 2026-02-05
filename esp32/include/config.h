@@ -16,7 +16,7 @@
 #define FIREBASE_USER_PASSWORD "YOUR_FIREBASE_USER_PASSWORD"
 
 // Device ID (unique identifier for this ESP32 unit)
-#define DEVICE_ID "esp32-001"
+#define DEVICE_ID "test-device-001"
 
 // Hardware Pin Configuration
 #define IR_RECEIVE_PIN 5    // GPIO for IR receiver (TSOP38238)

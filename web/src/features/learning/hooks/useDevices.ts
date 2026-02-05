@@ -21,9 +21,9 @@ export function useDevices(repository: IDeviceRepository) {
     return unsubscribe
   }, [repository])
 
-  const createDevice = async (name: string, ownerId: string) => {
+  const createDevice = async (name: string, deviceId: string, ownerId: string) => {
     try {
-      const device = await repository.create({ name, isLearning: false, ownerId })
+      const device = await repository.create({ id: deviceId, name, isLearning: false, ownerId })
       return device
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create device')

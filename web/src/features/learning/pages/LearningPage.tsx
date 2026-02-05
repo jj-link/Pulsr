@@ -30,8 +30,8 @@ export function LearningPage() {
     setShowLearningModal(false)
   }
 
-  const handleCreateDevice = async (name: string) => {
-    const device = await createDevice(name, 'user_123')
+  const handleCreateDevice = async (name: string, deviceId: string) => {
+    const device = await createDevice(name, deviceId, 'user_123')
     setSelectedDeviceId(device.id)
     setShowCreateDeviceModal(false)
   }

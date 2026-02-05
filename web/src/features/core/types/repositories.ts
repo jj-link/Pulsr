@@ -12,7 +12,7 @@ export interface ICommandRepository {
 export interface IDeviceRepository {
   getAll(): Promise<Device[]>
   getById(id: string): Promise<Device | null>
-  create(device: Omit<Device, 'id'>): Promise<Device>
+  create(device: Omit<Device, 'id'> & { id?: string }): Promise<Device>
   update(id: string, updates: Partial<Device>): Promise<void>
   delete(id: string): Promise<void>
   setLearningMode(deviceId: string, isLearning: boolean): Promise<void>
