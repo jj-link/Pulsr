@@ -145,7 +145,14 @@ bool FirebaseManager::uploadSignal(const DecodedSignal& signal, const String& co
     content.set("fields/value/integerValue", String(signal.value));
     content.set("fields/bits/integerValue", String(signal.bits));
     content.set("fields/isKnownProtocol/booleanValue", signal.isKnownProtocol);
-    content.set("fields/capturedAt/timestampValue", "now");
+    
+    // Use ISO 8601 timestamp format (required by Firestore REST API)
+    // Format: 2024-01-15T10:30:00Z
+    time_t now = time(nullptr);
+    struct tm* timeinfo = gmtime(&now);
+    char timestamp[30];
+    strftime(timestamp, sizeof(timestamp), "%Y-%m-%dT%H:%M:%SZ", timeinfo);
+    content.set("fields/capturedAt/timestampValue", timestamp);
     
     // Upload to Firestore
     Serial.print("[Firebase] Uploading signal: ");
