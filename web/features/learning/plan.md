@@ -182,6 +182,10 @@ features/learning/
     ├── LearningModal.test.tsx
     ├── CommandList.test.tsx
     ├── useCommands.test.ts
+## Future: Shared Device Selection
+
+The Remote tab uses URL-based device selection (`/remote/:deviceId`). In a future iteration, the Learning page could adopt the same pattern (`/learn/:deviceId`) or read the last-selected device from the URL to default its inline `DeviceSelector`. This would allow seamless device context when switching between tabs. For now, the Learning page keeps its own independent `DeviceSelector`.
+
 ## Device Pairing Strategy
 
 ### Problem

@@ -2,6 +2,21 @@
 
 **Purpose:** Provide remote control buttons that trigger IR transmission.
 
+## Navigation & Device Selection
+
+The "Remote" tab in the top nav is a **dropdown menu** listing all devices. Selecting a device navigates to `/remote/:deviceId` and opens the remote view for that device.
+
+**Behavior:**
+- Clicking the "Remote" nav item opens a dropdown of available devices
+- Selecting a device navigates to `/remote/:deviceId`
+- The tab label shows the selected device: "Remote: Living Room TV ▼"
+- If no device is selected, shows "Remote ▼" and the dropdown prompts selection
+- URL-based routing allows bookmarking and sharing device remotes
+
+**URL scheme:** `/remote/:deviceId`
+
+**Shared device context:** The selected `deviceId` from the URL param can be read by other tabs (Learn, Designer) to default to the same device. This is optional — other tabs keep their own inline `DeviceSelector` for now but can adopt the URL param later.
+
 ## Components
 
 ### RemoteButton

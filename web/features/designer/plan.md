@@ -225,6 +225,10 @@ features/designer/
     └── useLayout.test.ts
 ```
 
+## Future: Shared Device Selection
+
+The Remote tab uses URL-based device selection (`/remote/:deviceId`). In a future iteration, the Designer page could adopt the same pattern (`/designer/:deviceId`) or read the last-selected device from the URL to default its device context. This would allow seamless device context when switching between tabs. For now, the Designer page will use its own device selection mechanism.
+
 ## Integration
 
 Reads:
