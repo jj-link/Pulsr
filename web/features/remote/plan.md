@@ -17,6 +17,22 @@ The "Remote" tab in the top nav is a **dropdown menu** listing all devices. Sele
 
 **Shared device context:** The selected `deviceId` from the URL param can be read by other tabs (Learn, Designer) to default to the same device. This is optional — other tabs keep their own inline `DeviceSelector` for now but can adopt the URL param later.
 
+## Build Strategy
+
+The Remote page depends on the Designer to define button layouts. Since the Designer isn't built yet, we use a phased approach:
+
+### Phase 1: Empty State + Test Transmit Panel (Current)
+- **Default behavior:** Remote page shows an empty state: *"No buttons configured. Go to Designer to set up your remote."*
+- **Test panel:** A collapsible "Test Transmit" debug panel lists all learned commands for the selected device, each with a "Send" button. This allows testing the full queue → ESP32 → IR LED pipeline without a layout.
+- **Purpose:** Validate end-to-end transmission before investing in drag-and-drop Designer.
+- **Lifecycle:** The test panel is temporary — it will be removed or hidden behind a dev flag once the Designer is complete.
+
+### Phase 2: Layout-Driven Remote (After Designer)
+- Remote page reads the device's `layout` field from Firestore
+- Renders buttons according to the layout grid
+- The empty state only shows when no layout has been created yet
+- Test panel is removed
+
 ## Components
 
 ### RemoteButton
