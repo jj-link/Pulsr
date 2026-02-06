@@ -1,0 +1,209 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 1.5rem;
+  width: 90%;
+  max-width: 400px;
+}
+
+.btn-config-modal h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
+}
+
+.btn-config-position {
+  margin: 0 0 1.25rem;
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.btn-config-field {
+  margin-bottom: 1rem;
+}
+
+.btn-config-field label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.85rem;
+  color: #aaa;
+  font-weight: 500;
+}
+
+.btn-config-field select,
+.btn-config-field input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #444;
+  border-radius: 6px;
+  background-color: #222;
+  color: #eee;
+  font-size: 0.9rem;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.btn-config-field select:focus,
+.btn-config-field input:focus {
+  outline: none;
+  border-color: #646cff;
+}
+
+.btn-config-colors {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-config-color-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+}
+
+.btn-config-color-swatch:hover {
+  transform: scale(1.1);
+}
+
+.btn-config-color-swatch.selected {
+  border-color: #fff;
+}
+
+.btn-config-preview {
+  margin-bottom: 1.25rem;
+}
+
+.btn-config-preview label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.85rem;
+  color: #aaa;
+  font-weight: 500;
+}
+
+.btn-config-preview-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.btn-config-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.btn-config-actions-right {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.btn-config-cancel,
+.btn-config-save,
+.btn-config-delete {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.btn-config-cancel {
+  background-color: #333;
+  color: #ccc;
+}
+
+.btn-config-cancel:hover {
+  background-color: #444;
+}
+
+.btn-config-save {
+  background-color: #646cff;
+  color: #fff;
+}
+
+.btn-config-save:hover {
+  background-color: #535bf2;
+}
+
+.btn-config-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-config-delete {
+  background-color: transparent;
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+}
+
+.btn-config-delete:hover {
+  background-color: rgba(231, 76, 60, 0.1);
+}
+
+@media (prefers-color-scheme: light) {
+  .modal-content {
+    background-color: #fff;
+    border-color: #ddd;
+  }
+
+  .btn-config-modal h3 {
+    color: #222;
+  }
+
+  .btn-config-position {
+    color: #888;
+  }
+
+  .btn-config-field label,
+  .btn-config-preview label {
+    color: #666;
+  }
+
+  .btn-config-field select,
+  .btn-config-field input {
+    background-color: #f5f5f5;
+    border-color: #ddd;
+    color: #333;
+  }
+
+  .btn-config-color-swatch.selected {
+    border-color: #333;
+  }
+
+  .btn-config-cancel {
+    background-color: #e8e8e8;
+    color: #555;
+  }
+
+  .btn-config-cancel:hover {
+    background-color: #ddd;
+  }
+}

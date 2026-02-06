@@ -28,10 +28,11 @@ The Remote page depends on the Designer to define button layouts. Since the Desi
 - **Lifecycle:** The test panel is temporary — it will be removed or hidden behind a dev flag once the Designer is complete.
 
 ### Phase 2: Layout-Driven Remote (After Designer)
-- Remote page reads the device's `layout` field from Firestore
-- Renders buttons according to the layout grid
+- Remote page reads the device's `layout` from Firestore (created via Designer's click-to-place grid)
+- Renders buttons in a CSS grid matching the layout's `gridSize` (default: 3 cols × 4 rows)
+- Each button shows its label, color, and enqueues the assigned command on click
 - The empty state only shows when no layout has been created yet
-- Test panel is removed
+- Test panel is removed or hidden behind a dev flag
 
 ## Components
 

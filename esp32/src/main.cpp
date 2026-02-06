@@ -221,7 +221,7 @@ void setup() {
             DEVICE_ID,
             &protocolEncoder,
             &irTransmitter,
-            100  // 100ms poll interval
+            2000  // 2s poll interval
         );
         queueProcessor->onTransmissionEvent(onTransmissionEvent);
         Serial.println("[Pulsr] Queue processor initialized");

@@ -1,36 +1,50 @@
 # Designer - Web UI Implementation
 
-**Purpose:** Provide drag-and-drop interface for custom remote layouts.
+**Purpose:** Provide a click-to-place grid editor for custom remote layouts.
+
+## Build Strategy
+
+### Phase 1: Click-to-Place Grid (Current)
+- Fixed grid with configurable size (default: **3 columns × 4 rows**)
+- Click an empty cell → modal to assign command, set label, choose color
+- Click a filled cell → edit or delete the button
+- Grid size selector in the editor toolbar
+- No drag-and-drop — simple click-to-place/click-to-edit
+- Same Firestore schema as full version (upgrade path preserved)
+
+### Phase 2: Drag-and-Drop Upgrade (Future)
+- Add `@dnd-kit/core` for rearranging buttons by dragging
+- Multi-cell button sizes (span rows/cols)
+- Icon picker (Lucide)
+- This is an upgrade to Phase 1 — same data model, just richer editor UX
 
 ## Components
 
-### LayoutEditor
-Main editor component with drag-and-drop.
+### DesignerPage
+Main page with grid editor and toolbar.
 
 **Responsibilities:**
-- Render button grid
-- Handle drag-and-drop interactions
-- Edit mode toggle
+- Render the grid based on layout data
+- Grid size selector (rows × cols)
 - Save/cancel layout changes
-- Optimistic UI updates
+- Show empty cells as clickable placeholders
 
 ### ButtonConfigModal
 Configure individual button properties.
 
 **Responsibilities:**
-- Select command from library
-- Choose icon (Lucide icon picker)
-- Set color
+- Select command from learned commands list
 - Set label text
+- Set color
+- Delete button option
 
-### CommandPicker
-Select command to assign to button.
+### GridCell
+Individual cell in the layout grid.
 
 **Responsibilities:**
-- Display available commands
-- Filter by device
-- Show protocol information
-- Search functionality
+- Show button preview if assigned (label + color)
+- Show "+" placeholder if empty
+- Click handler opens ButtonConfigModal
 
 ## Testing Strategy
 
@@ -38,31 +52,27 @@ Select command to assign to button.
 - Layout validation (no overlapping buttons)
 - Position within grid bounds
 - JSON serialization/deserialization
-- Command filtering by device
+- Grid size changes preserve existing buttons within bounds
 
 ### Integration Tests
 - Save/load layout round-trip
 - Mock Firestore persistence
 
 ### E2E Tests (Playwright)
-- User can drag button to new position
-- User can add new button
-- User can assign command to button
+- User can click empty cell and assign command
+- User can edit existing button
+- User can delete button
 - Layout saves and persists
-
-**Note:** Drag-and-drop interactions difficult to unit test - rely on E2E tests and manual testing for UX validation.
+- Grid size change works correctly
 
 ## Tech Stack
 
 - **React 18** with TypeScript (strict mode)
-- **@dnd-kit/core** - Modern drag-and-drop library (recommended over react-dnd)
 - **Firebase SDK** - Firestore persistence
-- **shadcn/ui** - Accessible UI components (Radix UI primitives)
-- **Lucide React** - Icons (icon picker for button config)
-- **TailwindCSS** - Styling
+- **Lucide React** - Icons
 - **Vitest** - Unit tests (validation logic)
 - **React Testing Library** - Component tests
-- **Playwright** - E2E tests (drag-and-drop workflows)
+- **Playwright** - E2E tests
 
 ## Implementation Pattern
 
@@ -148,7 +158,7 @@ export function validateLayout(layout: Layout): ValidationResult {
 
 ### Mock-First Development
 
-Build with `InMemoryLayoutRepository` before ESP32 ready:
+Build with `InMemoryLayoutRepository` before Firestore ready:
 
 ```typescript
 class InMemoryLayoutRepository implements ILayoutRepository {
@@ -176,14 +186,12 @@ class InMemoryLayoutRepository implements ILayoutRepository {
 devices/{deviceId}
   - name: string
   - layout: {
-      gridSize: { rows: number, cols: number }
+      gridSize: { rows: number, cols: number }  // default: 4 rows × 3 cols
       buttons: [
         {
           id: string
           position: { row: number, col: number }
-          size: { rows: number, cols: number }
           commandId: string
-          icon: string (Lucide icon name)
           color: string (hex)
           label: string
         }
@@ -191,37 +199,32 @@ devices/{deviceId}
     }
 ```
 
+**Note:** `size` (multi-cell spans) and `icon` fields are reserved for Phase 2 drag-and-drop upgrade.
+
 ## File Structure
 
 ```
 features/designer/
 ├── components/
-│   ├── LayoutEditor.tsx
+│   ├── GridCell.tsx
 │   ├── ButtonConfigModal.tsx
-│   ├── CommandPicker.tsx
-│   ├── IconPicker.tsx
-│   ├── ColorPicker.tsx
+│   └── index.ts
+├── pages/
+│   ├── DesignerPage.tsx
+│   ├── DesignerPage.css
 │   └── index.ts
 ├── hooks/
 │   ├── useLayout.ts
-│   ├── useDragAndDrop.ts
-│   ├── useCommands.ts
 │   └── index.ts
 ├── repositories/
-│   ├── ILayoutRepository.ts
 │   ├── FirestoreLayoutRepository.ts
 │   ├── InMemoryLayoutRepository.ts
 │   └── index.ts
 ├── utils/
 │   ├── layoutValidation.ts
-│   ├── gridHelpers.ts
-│   └── index.ts
-├── types/
 │   └── index.ts
 └── __tests__/
-    ├── LayoutEditor.test.tsx
     ├── layoutValidation.test.ts
-    ├── gridHelpers.test.ts
     └── useLayout.test.ts
 ```
 
@@ -229,14 +232,23 @@ features/designer/
 
 The Remote tab uses URL-based device selection (`/remote/:deviceId`). In a future iteration, the Designer page could adopt the same pattern (`/designer/:deviceId`) or read the last-selected device from the URL to default its device context. This would allow seamless device context when switching between tabs. For now, the Designer page will use its own device selection mechanism.
 
+## Future: Drag-and-Drop Upgrade
+
+Once Phase 1 is working and stable:
+- Add `@dnd-kit/core` for drag-to-rearrange
+- Add multi-cell button sizes (`size: { rows, cols }`)
+- Add Lucide icon picker for buttons
+- Add color picker component
+- The Firestore schema already supports these fields — no migration needed
+
 ## Integration
 
 Reads:
-- Commands from Decoder track (via ICommandRepository)
+- Commands from Learning track (via existing command repository)
 - Layout data from Firestore (via ILayoutRepository)
 
 Writes:
 - Layout configuration to Firestore (via ILayoutRepository)
 
 Triggers:
-- Transmission track when button clicked (uses Transmission's IQueueRepository)
+- Transmission track when button clicked on Remote page (uses IQueueRepository)

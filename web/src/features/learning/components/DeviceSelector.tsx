@@ -4,7 +4,7 @@ interface DeviceSelectorProps {
   devices: Device[]
   selectedDeviceId: string | null
   onSelectDevice: (deviceId: string) => void
-  onCreateDevice: () => void
+  onCreateDevice?: () => void
 }
 
 export function DeviceSelector({
@@ -26,7 +26,7 @@ export function DeviceSelector({
           </option>
         ))}
       </select>
-      <button onClick={onCreateDevice}>+ New Device</button>
+      {onCreateDevice && <button onClick={onCreateDevice}>+ New Device</button>}
     </div>
   )
 }

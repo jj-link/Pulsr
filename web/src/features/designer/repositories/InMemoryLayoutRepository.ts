@@ -44,27 +44,28 @@ export class InMemoryLayoutRepository implements ILayoutRepository {
     if (commandIds.length < 3) return
 
     const mockLayout: DeviceLayout = {
+      gridSize: { rows: 4, cols: 3 },
       buttons: [
         {
           id: 'btn_1',
           commandId: commandIds[0],
           label: 'Power',
-          position: { x: 100, y: 50 },
-          size: { width: 80, height: 40 },
+          color: '#e74c3c',
+          position: { row: 0, col: 1 },
         },
         {
           id: 'btn_2',
           commandId: commandIds[1],
           label: 'Vol+',
-          position: { x: 200, y: 50 },
-          size: { width: 80, height: 40 },
+          color: '#3498db',
+          position: { row: 1, col: 2 },
         },
         {
           id: 'btn_3',
           commandId: commandIds[2],
           label: 'Vol-',
-          position: { x: 200, y: 100 },
-          size: { width: 80, height: 40 },
+          color: '#3498db',
+          position: { row: 2, col: 2 },
         },
       ],
     }

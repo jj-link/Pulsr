@@ -15,6 +15,8 @@ QueueProcessor::QueueProcessor(
     pollIntervalMs(pollIntervalMs),
     lastPollTime(0),
     processing(false),
+    consecutiveErrors(0),
+    backoffUntil(0),
     totalSent(0),
     totalFailed(0),
     transmissionCallback(nullptr)
@@ -22,6 +24,11 @@ QueueProcessor::QueueProcessor(
 }
 
 void QueueProcessor::update() {
+    // Respect backoff period after errors
+    if (backoffUntil > 0 && millis() < backoffUntil) {
+        return;
+    }
+    
     // Check if it's time to poll
     if (millis() - lastPollTime < pollIntervalMs) {
         return;
@@ -31,8 +38,32 @@ void QueueProcessor::update() {
     
     // Poll for pending queue items
     if (!processing) {
-        pollQueue();
+        if (pollQueue()) {
+            consecutiveErrors = 0;  // Reset on success
+        } else {
+            consecutiveErrors++;
+            if (consecutiveErrors >= RESET_AFTER_ERRORS) {
+                resetConnection();
+            }
+            uint32_t delay = getBackoffDelay();
+            backoffUntil = millis() + delay;
+            Serial.print("[Queue] Poll failed, backing off ");
+            Serial.print(delay);
+            Serial.println("ms");
+        }
     }
+}
+
+void QueueProcessor::resetConnection() {
+    Serial.println("[Queue] Resetting SSL connection...");
+    fbdo->clear();
+    consecutiveErrors = 0;
+}
+
+uint32_t QueueProcessor::getBackoffDelay() const {
+    // Exponential backoff: 2s, 4s, 8s, 16s, 32s, capped at 60s
+    uint32_t delay = pollIntervalMs * (1 << min(consecutiveErrors, (uint32_t)5));
+    return min(delay, MAX_BACKOFF_MS);
 }
 
 bool QueueProcessor::pollQueue() {
@@ -40,6 +71,8 @@ bool QueueProcessor::pollQueue() {
     
     // List all documents in the queue subcollection
     if (!Firebase.Firestore.listDocuments(fbdo, projectId, "", queuePath.c_str(), 10, "", "", "", false)) {
+        Serial.print("[Queue] List failed: ");
+        Serial.println(fbdo->errorReason());
         return false;
     }
     
@@ -50,7 +83,7 @@ bool QueueProcessor::pollQueue() {
     // Check if there are any documents
     FirebaseJsonData documentsArray;
     if (!json.get(documentsArray, "documents")) {
-        return false;  // No documents in queue
+        return true;  // No documents in queue — not an error
     }
     
     // Iterate through documents to find a pending one
@@ -147,7 +180,7 @@ bool QueueProcessor::pollQueue() {
         return true;  // Process one item per poll cycle
     }
     
-    return false;  // No pending items found
+    return true;  // No pending items — not an error
 }
 
 bool QueueProcessor::loadCommand(const String& commandId, String& protocol, uint32_t& address, uint32_t& command, uint16_t& bits) {

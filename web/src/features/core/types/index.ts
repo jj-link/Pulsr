@@ -28,6 +28,7 @@ export interface Device {
 }
 
 export interface DeviceLayout {
+  gridSize: { rows: number; cols: number }
   buttons: LayoutButton[]
 }
 
@@ -35,14 +36,8 @@ export interface LayoutButton {
   id: string
   commandId: string
   label: string
-  position: {
-    x: number
-    y: number
-  }
-  size: {
-    width: number
-    height: number
-  }
+  color: string
+  position: { row: number; col: number }
 }
 
 export interface QueueItem {

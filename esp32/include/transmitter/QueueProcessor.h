@@ -34,7 +34,7 @@ public:
         const char* deviceId,
         IProtocolEncoder* encoder,
         IIRTransmitter* transmitter,
-        uint32_t pollIntervalMs = 100
+        uint32_t pollIntervalMs = 2000
     );
 
     void update();  // Call in main loop
@@ -59,6 +59,14 @@ private:
     uint32_t pollIntervalMs;
     unsigned long lastPollTime;
     bool processing;
+    
+    // Error recovery
+    uint32_t consecutiveErrors;
+    unsigned long backoffUntil;
+    static const uint32_t MAX_BACKOFF_MS = 60000;  // 1 minute max
+    static const uint32_t RESET_AFTER_ERRORS = 5;  // Reset SSL after 5 consecutive failures
+    void resetConnection();
+    uint32_t getBackoffDelay() const;
     
     // Stats
     uint32_t totalSent;
