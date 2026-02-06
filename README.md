@@ -51,7 +51,7 @@ pio run -e ir_loopback_test -t upload
 pio device monitor
 ```
 
-Press the **BOOT button** on the ESP32 to cycle through tests (NEC, Samsung). The NeoPixel shows: purple = transmitting, blue = waiting, green = PASS, red = FAIL.
+Press **any key** in the serial monitor to run all tests. Results print automatically. Press any key again to re-run.
 
 #### IR Receiver Test
 

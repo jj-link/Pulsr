@@ -41,3 +41,23 @@ TransmitResult ESP32IRTransmitter::transmitNEC(uint32_t data, uint16_t nbits) {
     result.errorMessage = "";
     return result;
 }
+
+TransmitResult ESP32IRTransmitter::transmitSamsung(uint64_t data, uint16_t nbits) {
+    TransmitResult result;
+    
+    irsend->sendSAMSUNG(data, nbits);
+    
+    result.success = true;
+    result.errorMessage = "";
+    return result;
+}
+
+TransmitResult ESP32IRTransmitter::transmitSony(uint32_t data, uint16_t nbits) {
+    TransmitResult result;
+    
+    irsend->sendSony(data, nbits);
+    
+    result.success = true;
+    result.errorMessage = "";
+    return result;
+}

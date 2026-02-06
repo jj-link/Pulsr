@@ -56,16 +56,14 @@ void setup() {
 
 void loop() {
     // Check if a signal has been captured
-    if (signalCapture.hasNewSignal()) {
+    decode_results results;
+    if (signalCapture.decode(&results)) {
         // Flash LED blue to indicate signal received
         statusLED.setPixelColor(0, COLOR_SIGNAL);
         statusLED.show();
         
-        // Get raw signal
-        decode_results* raw = signalCapture.getSignal();
-        
         // Decode the signal
-        DecodedSignal decoded = protocolDecoder.decode(raw);
+        DecodedSignal decoded = protocolDecoder.decode(&results);
         
         // Print results
         Serial.println("\n========== IR SIGNAL CAPTURED ==========");

@@ -12,6 +12,8 @@ public:
     void begin() override;
     TransmitResult transmit(uint16_t* rawData, uint16_t length, uint16_t frequency = 38) override;
     TransmitResult transmitNEC(uint32_t data, uint16_t nbits = 32) override;
+    TransmitResult transmitSamsung(uint64_t data, uint16_t nbits = 32) override;
+    TransmitResult transmitSony(uint32_t data, uint16_t nbits = 12) override;
 
 private:
     IRsend* irsend;

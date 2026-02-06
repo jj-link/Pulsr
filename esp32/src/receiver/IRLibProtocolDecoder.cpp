@@ -30,12 +30,9 @@ DecodedSignal IRLibProtocolDecoder::decodeNEC(decode_results* raw) {
     signal.rawTimings = nullptr;
     signal.rawLength = 0;
     
-    // NEC format: address(8) ~address(8) command(8) ~command(8)
-    // Extract address from bits 0-7
-    signal.address = raw->value & 0xFF;
-    
-    // Extract command from bits 16-23
-    signal.command = (raw->value >> 16) & 0xFF;
+    // Use the library's already-extracted address and command
+    signal.address = raw->address;
+    signal.command = raw->command;
     
     return signal;
 }
@@ -49,12 +46,9 @@ DecodedSignal IRLibProtocolDecoder::decodeSamsung(decode_results* raw) {
     signal.rawTimings = nullptr;
     signal.rawLength = 0;
     
-    // Samsung format: address(16 bits) | command(8) | ~command(8)
-    // Extract 16-bit address from bits 0-15
-    signal.address = raw->value & 0xFFFF;
-    
-    // Extract command from bits 16-23
-    signal.command = (raw->value >> 16) & 0xFF;
+    // Use the library's already-extracted address and command
+    signal.address = raw->address;
+    signal.command = raw->command;
     
     return signal;
 }
@@ -68,23 +62,9 @@ DecodedSignal IRLibProtocolDecoder::decodeSony(decode_results* raw) {
     signal.rawTimings = nullptr;
     signal.rawLength = 0;
     
-    // Sony SIRC format varies (12, 15, or 20 bits)
-    // Command is in the lower 7 bits
-    signal.command = raw->value & 0x7F;
-    
-    // Address/device code depends on bit length
-    if (raw->bits == 12) {
-        // 12-bit: 7 bits command, 5 bits address
-        signal.address = (raw->value >> 7) & 0x1F;
-    } else if (raw->bits == 15) {
-        // 15-bit: 7 bits command, 8 bits address
-        signal.address = (raw->value >> 7) & 0xFF;
-    } else if (raw->bits == 20) {
-        // 20-bit: 7 bits command, 5 bits address, 8 bits extended
-        signal.address = (raw->value >> 7) & 0x1F;
-    } else {
-        signal.address = 0;
-    }
+    // Use the library's already-extracted address and command
+    signal.address = raw->address;
+    signal.command = raw->command;
     
     return signal;
 }

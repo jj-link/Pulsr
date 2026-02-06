@@ -14,10 +14,10 @@ Escape special characters with a backslash `\`:
 
 ```cpp
 // Before (causes connection error):
-#define WIFI_SSID "Joseph's wifi"
+#define WIFI_SSID "John Doe's wifi"
 
 // After (works correctly):
-#define WIFI_SSID "Joseph\'s wifi"
+#define WIFI_SSID "John Doe\'s wifi"
 ```
 
 ## Common Special Characters That Need Escaping

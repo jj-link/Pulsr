@@ -70,11 +70,10 @@ EncodedSignal IRLibProtocolEncoders::encodeNEC(uint32_t address, uint32_t comman
     // NEC format: address (8 bits) | ~address (8 bits) | command (8 bits) | ~command (8 bits)
     uint32_t data = (address & 0xFF) | ((~address & 0xFF) << 8) | ((command & 0xFF) << 16) | ((~command & 0xFF) << 24);
     
-    // Encode 32 bits (LSB first)
-    for (int i = 0; i < 32; i++) {
+    // Encode 32 bits (MSB first, matching IRremoteESP8266 convention)
+    for (int i = 31; i >= 0; i--) {
         signal.rawData[idx++] = 560;  // Mark
-        signal.rawData[idx++] = (data & 1) ? 1690 : 560;  // Space (1690 for '1', 560 for '0')
-        data >>= 1;
+        signal.rawData[idx++] = ((data >> i) & 1) ? 1690 : 560;  // Space (1690 for '1', 560 for '0')
     }
     
     // Footer mark
@@ -110,14 +109,13 @@ EncodedSignal IRLibProtocolEncoders::encodeSamsung(uint32_t address, uint32_t co
     signal.rawData[idx++] = 4500;
     signal.rawData[idx++] = 4500;
     
-    // Combine address and command
-    uint32_t data = (address & 0xFFFF) | ((command & 0xFF) << 16) | ((~command & 0xFF) << 24);
+    // Combine address and command (IRremoteESP8266 format: address in upper 16 bits)
+    uint32_t data = ((address & 0xFFFF) << 16) | ((command & 0xFF) << 8) | (~command & 0xFF);
     
-    // Encode 32 bits (LSB first)
-    for (int i = 0; i < 32; i++) {
+    // Encode 32 bits (MSB first, matching IRremoteESP8266 convention)
+    for (int i = 31; i >= 0; i--) {
         signal.rawData[idx++] = 560;
-        signal.rawData[idx++] = (data & 1) ? 1690 : 560;
-        data >>= 1;
+        signal.rawData[idx++] = ((data >> i) & 1) ? 1690 : 560;
     }
     
     // Footer
@@ -158,11 +156,10 @@ EncodedSignal IRLibProtocolEncoders::encodeSony(uint32_t address, uint32_t comma
     // Combine command (7 bits) and address (5/8/13 bits depending on total bits)
     uint32_t data = (command & 0x7F) | ((address & ((1 << (bits - 7)) - 1)) << 7);
     
-    // Encode bits (LSB first)
-    for (int i = 0; i < bits; i++) {
-        signal.rawData[idx++] = (data & 1) ? 1200 : 600;  // Space
+    // Encode bits (MSB first, matching IRremoteESP8266 convention)
+    for (int i = bits - 1; i >= 0; i--) {
+        signal.rawData[idx++] = (((data >> i) & 1)) ? 1200 : 600;  // Space
         signal.rawData[idx++] = 600;  // Mark
-        data >>= 1;
     }
     
     return signal;
