@@ -2,6 +2,7 @@
 #define QUEUE_PROCESSOR_H
 
 #include <Arduino.h>
+#include <functional>
 #include <Firebase_ESP_Client.h>
 #include "transmitter/IProtocolEncoder.h"
 #include "transmitter/IIRTransmitter.h"
@@ -9,9 +10,12 @@
 enum class TransmissionStatus {
     PENDING,
     PROCESSING,
-    SENT,
+    COMPLETED,
     FAILED
 };
+
+// Callback for transmission events (status, protocol, commandId)
+using TransmissionEventCallback = std::function<void(TransmissionStatus status, const String& protocol, const String& commandId)>;
 
 struct TransmissionQueueItem {
     String queueId;
@@ -36,6 +40,11 @@ public:
     void update();  // Call in main loop
     bool isProcessing() const { return processing; }
     
+    // Callbacks
+    void onTransmissionEvent(TransmissionEventCallback callback) {
+        transmissionCallback = callback;
+    }
+    
     // Stats
     uint32_t getTotalSent() const { return totalSent; }
     uint32_t getTotalFailed() const { return totalFailed; }
@@ -54,6 +63,9 @@ private:
     // Stats
     uint32_t totalSent;
     uint32_t totalFailed;
+    
+    // Callback
+    TransmissionEventCallback transmissionCallback;
     
     // Helper methods
     bool pollQueue();

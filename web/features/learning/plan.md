@@ -255,6 +255,9 @@ Remove hardcoded credentials, use secure token exchange:
 
 ## Current Status
 - Web UI: Complete with TDD (33 tests passing)
-- ESP32: Firestore integration ready
+- ESP32: Firestore integration ready with pendingSignal flow
 - WiFi: Working with setTxPower fix
-- **Blocker:** Firebase credentials needed for end-to-end testing
+- Learning flow: ESP32 writes pendingSignal → web modal shows it → user names + saves → command created
+- Edit/delete commands: Working with composite deviceId/commandId format
+- NeoPixel feedback: Blue = learning, green = captured, orange = timeout
+- Nav: "Devices" tab renamed to "Learn"

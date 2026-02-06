@@ -71,6 +71,9 @@ Adafruit_NeoPixel statusLED(NEOPIXEL_COUNT, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 #define COLOR_SUCCESS       statusLED.Color(0, 100, 0)   // Green = success
 #define COLOR_ERROR         statusLED.Color(100, 0, 0)   // Red = error
 #define COLOR_TIMEOUT       statusLED.Color(100, 50, 0)  // Orange = timeout
+#define COLOR_TX_PROCESSING statusLED.Color(80, 0, 80)   // Purple = processing queue item
+#define COLOR_TX_SUCCESS    statusLED.Color(0, 100, 50)   // Cyan-green = transmit success
+#define COLOR_TX_FAILED     statusLED.Color(100, 20, 0)   // Red-orange = transmit failed
 
 // ============== Callback Handlers ==============
 
@@ -131,6 +134,41 @@ void onSignalCaptured(const DecodedSignal& signal) {
     }
 }
 
+// Track when to revert LED back to ready after transmit flash
+unsigned long txLedRevertTime = 0;
+
+void onTransmissionEvent(TransmissionStatus status, const String& protocol, const String& commandId) {
+    switch (status) {
+        case TransmissionStatus::PROCESSING:
+            Serial.print("[TX] Processing command: ");
+            Serial.println(commandId);
+            statusLED.setPixelColor(0, COLOR_TX_PROCESSING);
+            statusLED.show();
+            break;
+            
+        case TransmissionStatus::COMPLETED:
+            Serial.print("[TX] Transmitted OK: ");
+            Serial.print(protocol);
+            Serial.print(" cmd=");
+            Serial.println(commandId);
+            statusLED.setPixelColor(0, COLOR_TX_SUCCESS);
+            statusLED.show();
+            txLedRevertTime = millis() + 500;  // Flash for 500ms
+            break;
+            
+        case TransmissionStatus::FAILED:
+            Serial.print("[TX] Failed: ");
+            Serial.println(commandId);
+            statusLED.setPixelColor(0, COLOR_TX_FAILED);
+            statusLED.show();
+            txLedRevertTime = millis() + 1000;  // Flash for 1s
+            break;
+            
+        default:
+            break;
+    }
+}
+
 void onFirebaseLearningModeChanged(bool isLearning) {
     Serial.print("[Firebase] Learning mode changed: ");
     Serial.println(isLearning ? "ON" : "OFF");
@@ -185,6 +223,7 @@ void setup() {
             &irTransmitter,
             100  // 100ms poll interval
         );
+        queueProcessor->onTransmissionEvent(onTransmissionEvent);
         Serial.println("[Pulsr] Queue processor initialized");
     } else {
         Serial.println("[Pulsr] Firebase connection failed - will retry");
@@ -207,6 +246,13 @@ void loop() {
     // Update queue processor (polls Firestore queue and transmits commands)
     if (queueProcessor != nullptr && firebaseManager.getState() == FirebaseState::FIREBASE_READY) {
         queueProcessor->update();
+    }
+    
+    // Revert transmit LED flash back to ready color after timeout
+    if (txLedRevertTime > 0 && millis() >= txLedRevertTime) {
+        statusLED.setPixelColor(0, COLOR_READY);
+        statusLED.show();
+        txLedRevertTime = 0;
     }
     
     // Update status LED based on Firebase state

@@ -19,9 +19,11 @@
 #define DEVICE_ID "esp32-001"
 
 // Hardware Pin Configuration
-#define IR_RECEIVE_PIN 15   // GPIO for IR receiver (TSOP38238)
+#define IR_RECEIVE_PIN 5    // GPIO for IR receiver (TSOP38238)
 #define IR_SEND_PIN 4       // GPIO for IR LED transmitter
-#define STATUS_LED_PIN 2    // Built-in LED for status indication
+#define NEOPIXEL_PIN 48     // Built-in NeoPixel on ESP32-S3 DevKit
+#define NEOPIXEL_COUNT 1    // Number of NeoPixels
+#define NEOPIXEL_BRIGHTNESS 25  // 0-255, lower = dimmer (25 ≈ 10%)
 
 // Timing Configuration
 #define LEARNING_TIMEOUT_MS 30000  // 30 seconds timeout for learning mode

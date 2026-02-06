@@ -82,6 +82,28 @@ Validation: Point at TV and verify it responds to transmitted signals.
 - **Polling Frequency:** ~100ms
 - **Range:** Sufficient for across-room control
 
+## NeoPixel LED Feedback
+
+The built-in NeoPixel RGB LED provides visual feedback during transmission:
+
+| Color | Meaning |
+|-------|---------|
+| Purple | Processing queue item (received from web app) |
+| Cyan-green | Transmit success (flashes 500ms) |
+| Red-orange | Transmit failed (flashes 1s) |
+| Dim green | Returns to ready state after flash |
+
+Feedback is delivered via `TransmissionEventCallback` from `QueueProcessor` to `main.cpp`.
+
+## Current Status
+
+- **QueueProcessor:** Implemented with `listDocuments` polling, filters for `status: "pending"` items
+- **Status alignment:** Uses lowercase status values (`pending`, `processing`, `completed`, `failed`) matching web app
+- **Timestamps:** ISO 8601 format for Firestore REST API compatibility
+- **Command loading:** Handles both `stringValue` and `integerValue` for address/command fields
+- **NeoPixel feedback:** Wired via callback from QueueProcessor to main.cpp LED handler
+- **Poll interval:** 100ms
+
 ## Integration
 
 See `docs/contracts/transmitter.md` for Firestore data model and integration flow.
