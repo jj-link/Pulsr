@@ -18,7 +18,11 @@ export const router = createBrowserRouter([
         element: <RemotePage />,
       },
       {
-        path: 'devices',
+        path: 'remote/:deviceId',
+        element: <RemotePage />,
+      },
+      {
+        path: 'learn',
         element: <LearningPage />,
       },
       {
