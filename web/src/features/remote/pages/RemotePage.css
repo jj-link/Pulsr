@@ -1,0 +1,220 @@
+.remote-page {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.remote-empty-state {
+  text-align: center;
+  padding: 2rem;
+  border: 1px dashed #444;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.remote-empty-state h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+
+.remote-empty-state p {
+  color: #888;
+  margin: 0;
+}
+
+.remote-empty-state a {
+  color: #646cff;
+}
+
+.test-panel {
+  border: 1px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.test-panel-toggle {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: #1a1a1a;
+  border: none;
+  color: #ccc;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.test-panel-toggle:hover {
+  background-color: #222;
+}
+
+.test-panel-content {
+  padding: 1rem;
+}
+
+.test-panel-empty {
+  color: #666;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.test-panel-empty a {
+  color: #646cff;
+}
+
+.test-command-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.test-command-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background-color: #1a1a1a;
+  border-radius: 6px;
+}
+
+.test-command-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.test-command-name {
+  font-weight: 500;
+  color: #eee;
+}
+
+.test-command-protocol {
+  font-size: 0.75rem;
+  color: #888;
+  background-color: #2a2a2a;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+.test-send-btn {
+  padding: 0.35rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #646cff;
+  color: #fff;
+  font-size: 0.85rem;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.test-send-btn:hover {
+  background-color: #535bf2;
+}
+
+.test-send-btn.sending {
+  background-color: #444;
+  cursor: not-allowed;
+}
+
+.test-send-btn:disabled {
+  opacity: 0.7;
+}
+
+.test-queue-status {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #333;
+}
+
+.test-queue-status h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: #888;
+  font-weight: 500;
+}
+
+.test-queue-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 0;
+  font-size: 0.85rem;
+}
+
+.test-queue-command {
+  color: #aaa;
+}
+
+.test-queue-badge {
+  padding: 0.1rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.test-queue-badge.pending {
+  background-color: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+}
+
+.test-queue-badge.processing {
+  background-color: rgba(33, 150, 243, 0.15);
+  color: #2196f3;
+}
+
+.test-queue-badge.completed {
+  background-color: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+}
+
+.test-queue-badge.failed {
+  background-color: rgba(244, 67, 54, 0.15);
+  color: #f44336;
+}
+
+@media (prefers-color-scheme: light) {
+  .remote-empty-state {
+    border-color: #ddd;
+  }
+
+  .remote-empty-state p {
+    color: #666;
+  }
+
+  .test-panel {
+    border-color: #e0e0e0;
+  }
+
+  .test-panel-toggle {
+    background-color: #f5f5f5;
+    color: #333;
+  }
+
+  .test-panel-toggle:hover {
+    background-color: #eee;
+  }
+
+  .test-command-row {
+    background-color: #f9f9f9;
+  }
+
+  .test-command-name {
+    color: #333;
+  }
+
+  .test-command-protocol {
+    color: #666;
+    background-color: #e8e8e8;
+  }
+
+  .test-queue-status {
+    border-top-color: #e0e0e0;
+  }
+
+  .test-queue-command {
+    color: #666;
+  }
+}
