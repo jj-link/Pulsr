@@ -1,7 +1,7 @@
 # Receiver - ESP32 Status
 
 **Last Updated:** 2026-02-07  
-**Phase:** Streaming Migration
+**Phase:** RTDB Streaming Complete
 
 ## Progress
 
@@ -37,12 +37,11 @@
 - [x] WiFi connection manager with auto-reconnect
 - [x] Device authentication (email/password)
 - [x] Upload commands to Firestore (`devices/{deviceId}/commands/{commandId}`)
-- [x] Poll for `isLearning` state changes (legacy, being replaced by streaming)
-- [ ] Migrate to Firestore real-time streaming for `isLearning` state changes
+- [x] **RTDB streaming** for `isLearning` state changes (~100ms latency)
+- [x] **RTDB streaming** for `pendingSignal` delivery to web UI
 - [x] FirebaseManager class with state management
 - [x] Integration with LearningStateMachine callbacks in main.cpp
 - [x] Production firmware complete and verified (17.1% Flash, 14.8% RAM)
-- [ ] Hardware testing with real Firebase project and credentials
 
 ## Blockers
 
@@ -50,8 +49,6 @@ None
 
 ## Next Steps
 
-1. **Replace polling with Firestore streaming** for device document (isLearning state)
-   - Eliminates ~43,200 reads/day per device from 2s polling
-   - Enables instant learning mode activation (currently up to 2s delay)
-2. Add error logging to `checkLearningMode` (done — diagnostic build)
-3. Hardware testing with real Firebase project and credentials
+1. Create hardware validation test with real Firebase project
+2. Monitor WiFi stability in long-running sessions
+3. Add unit tests for protocol decoder edge cases
