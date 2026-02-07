@@ -1,7 +1,7 @@
 # Transmitter - ESP32 Status
 
 **Last Updated:** 2026-02-07  
-**Phase:** RTDB Direct Command Dispatch
+**Phase:** Native Sender Migration
 
 ## Progress
 
@@ -28,15 +28,25 @@
   - [ ] Hardware tested via `ir_transmitter_test`
 - [x] **RTDB Command Dispatch**
   - [x] Handle `pendingCommand` in RTDB stream callback
-  - [x] Extract protocol/address/command/bits from stream data
-  - [x] Encode and transmit IR via ProtocolEncoders + ESP32IRTransmitter
   - [x] Clear `pendingCommand` from RTDB after transmission
   - [x] Removed QueueProcessor and Firestore queue code
+- [ ] **Native Sender Migration**
+  - [ ] Update `PendingCommand` struct: replace `address`/`command` with `value` (uint64_t)
+  - [ ] Update `FirebaseManager` RTDB parsing: read `value` instead of `address`/`command`
+  - [ ] Update `onCommandReceived`: dispatch to native senders (`transmitSamsung`/`transmitNEC`/`transmitSony`) with raw `value`
+  - [ ] Remove custom `ProtocolEncoders` from production transmit path
+  - [ ] Hardware test: verify Samsung TV responds to native sender
 
 ### Firebase Integration
 - [x] RTDB streaming for `isLearning` (working, ~100ms latency)
 - [x] RTDB streaming for `pendingCommand` (working, ~100ms latency)
 - [x] Removed Firestore queue reads/writes from ESP32
+
+### Web Integration (cross-cutting)
+- [ ] Add `value` and `bits` fields to `IRCommand` type
+- [ ] Persist `value` and `bits` when saving commands from `pendingSignal`
+- [ ] Send raw `value` (not `address`/`command`) in RTDB `pendingCommand`
+- [ ] Clear old Firestore command data (stale address/command-only records)
 
 ## Blockers
 
@@ -44,6 +54,8 @@ None.
 
 ## Next Steps
 
-1. Create `ir_transmitter_test` hardware validation script
-2. Add unit tests for protocol encoders
-3. Monitor WiFi stability in long-running sessions
+1. Implement native sender migration (ESP32 + web)
+2. Clear Firestore, re-learn Samsung Power with corrected data model
+3. Validate full loop: web button → RTDB → ESP32 native sender → TV responds
+4. Update `ir_native_samsung_test` with verified raw value
+5. Monitor WiFi stability in long-running sessions
