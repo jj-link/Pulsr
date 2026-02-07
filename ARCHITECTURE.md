@@ -196,12 +196,11 @@ docs/
 └── ARCHITECTURE.md         # This file - system overview
 
 esp32/
-├── receiver/
-│   ├── plan.md             # Design, Firestore schema, task list
-│   └── progress.md         # Implementation checklist
-├── transmitter/
-│   ├── plan.md
-│   └── progress.md
+├── feature_plans/
+│   ├── receiver_plan.md       # Design, Firestore schema, task list
+│   ├── receiver_progress.md   # Implementation checklist
+│   ├── transmitter_plan.md
+│   └── transmitter_progress.md
 ├── src/
 │   ├── main.cpp            # Production firmware
 │   ├── receiver/            # Learning mode implementations
@@ -217,28 +216,22 @@ esp32/
 web/
 ├── ARCHITECTURE.md         # Web app tech stack and patterns
 ├── PROJECT_STRUCTURE.md    # Detailed file organization
+├── feature_plans/
+│   ├── learning_plan.md       # Design, Firestore schema, task list
+│   ├── learning_progress.md   # Implementation checklist
+│   ├── remote_plan.md
+│   ├── remote_progress.md
+│   ├── designer_plan.md
+│   ├── designer_progress.md
+│   ├── chatbot_plan.md
+│   └── chatbot_progress.md
 ├── package.json            # Dependencies
 ├── src/
 │   └── features/
-│       ├── decoder/
-│       │   ├── plan.md         # Design, Firestore schema, task list
-│       │   ├── progress.md     # Implementation checklist
-│       │   ├── components/
-│       │   ├── hooks/
-│       │   ├── repositories/
-│       │   └── __tests__/
-│       ├── transmission/
-│       │   ├── plan.md
-│       │   ├── progress.md
-│       │   └── ... (same structure)
+│       ├── learning/       # components, hooks, repositories, __tests__
+│       ├── remote/
 │       ├── designer/
-│       │   ├── plan.md
-│       │   ├── progress.md
-│       │   └── ... (same structure)
 │       ├── chatbot/
-│       │   ├── plan.md
-│       │   ├── progress.md
-│       │   └── ... (same structure)
 │       └── core/
 │           ├── firebase/
 │           ├── ui/
@@ -254,13 +247,13 @@ web/
 
 **Parallel Work:** Teams (or agents) can work on ESP32 decoder and Web decoder independently - each has their own plan and progress tracking.
 
-**plan.md Contains:**
+**{feature}_plan.md Contains:**
 - Feature requirements
 - Firestore schema (duplicated where needed)
 - Implementation design
 - Task list
 
-**progress.md Contains:**
+**{feature}_progress.md Contains:**
 - Checkboxes for completed tasks
 - Current blockers
 - Next steps
