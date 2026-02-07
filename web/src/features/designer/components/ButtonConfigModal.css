@@ -168,6 +168,85 @@
   background-color: rgba(231, 76, 60, 0.1);
 }
 
+/* Inline Learning (Phase 1.5) */
+
+.btn-config-learn-new {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px dashed #646cff;
+  border-radius: 6px;
+  background-color: transparent;
+  color: #646cff;
+  font-size: 0.85rem;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.btn-config-learn-new:hover {
+  background-color: rgba(100, 108, 255, 0.1);
+}
+
+.btn-config-learning {
+  margin-bottom: 1rem;
+}
+
+.btn-config-learning-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.btn-config-learning-status.waiting {
+  background-color: rgba(52, 152, 219, 0.15);
+  color: #3498db;
+}
+
+.btn-config-learning-status.success {
+  background-color: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+}
+
+.btn-config-learning-pulse {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #3498db;
+  animation: learningPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes learningPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+.btn-config-learning-info {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  color: #888;
+  font-family: monospace;
+}
+
+.btn-config-learning-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.btn-config-learning-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
 @media (prefers-color-scheme: light) {
   .modal-content {
     background-color: #fff;

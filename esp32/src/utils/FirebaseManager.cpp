@@ -220,7 +220,13 @@ bool FirebaseManager::checkLearningMode() {
             }
             
             return true;
+        } else {
+            Serial.println("[Firebase] checkLearningMode: isLearning field not found in response");
+            Serial.println(fbdo.payload().c_str());
         }
+    } else {
+        Serial.print("[Firebase] checkLearningMode failed: ");
+        Serial.println(fbdo.errorReason());
     }
     
     return false;

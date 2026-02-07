@@ -10,7 +10,7 @@ import './DesignerPage.css'
 
 export function DesignerPage() {
   const { deviceRepository, commandRepository } = useRepositories()
-  const { devices } = useDevices(deviceRepository)
+  const { devices, setLearningMode, clearPendingSignal } = useDevices(deviceRepository)
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null)
   const { commands } = useCommands(commandRepository, selectedDeviceId)
   const {
@@ -25,6 +25,8 @@ export function DesignerPage() {
     save,
     reset,
   } = useLayout(selectedDeviceId ?? undefined)
+
+  const selectedDevice = devices.find((d) => d.id === selectedDeviceId)
 
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [modalOpen, setModalOpen] = useState(false)
@@ -58,6 +60,39 @@ export function DesignerPage() {
   const handleDeleteButton = () => {
     if (editingButton) {
       removeButton(editingButton.id)
+    }
+  }
+
+  const handleStartLearning = async () => {
+    if (!selectedDeviceId) return
+    await setLearningMode(selectedDeviceId, true)
+  }
+
+  const handleStopLearning = async () => {
+    if (!selectedDeviceId) return
+    await clearPendingSignal(selectedDeviceId)
+    await setLearningMode(selectedDeviceId, false)
+  }
+
+  const handleSaveNewCommand = async (name: string): Promise<string | undefined> => {
+    if (!selectedDeviceId || !selectedDevice?.pendingSignal) return undefined
+    const signal = selectedDevice.pendingSignal
+    const newCommand = await commandRepository.create({
+      deviceId: selectedDeviceId,
+      name,
+      protocol: signal.protocol,
+      address: signal.address,
+      command: signal.command,
+    })
+    await clearPendingSignal(selectedDeviceId)
+    await setLearningMode(selectedDeviceId, false)
+    return newCommand.id
+  }
+
+  const handleModalClose = () => {
+    setModalOpen(false)
+    if (selectedDevice?.isLearning) {
+      handleStopLearning()
     }
   }
 
@@ -157,18 +192,22 @@ export function DesignerPage() {
 
           {commands.length === 0 && (
             <p className="designer-no-commands">
-              No commands learned yet. <a href="/learn">Go to Learn</a> to capture IR commands first.
+              No commands learned yet. Click a cell and use "Learn New Command" to capture IR signals.
             </p>
           )}
 
           <ButtonConfigModal
             isOpen={modalOpen}
-            onClose={() => setModalOpen(false)}
+            onClose={handleModalClose}
             onSave={handleSaveButton}
             onDelete={editingButton ? handleDeleteButton : undefined}
             commands={commands}
             position={editingPosition}
             existingButton={editingButton}
+            onStartLearning={handleStartLearning}
+            onStopLearning={handleStopLearning}
+            onSaveNewCommand={handleSaveNewCommand}
+            pendingSignal={selectedDevice?.pendingSignal}
           />
         </>
       )}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { IRCommand, LayoutButton } from '@/features/core/types'
+import { IRCommand, LayoutButton, PendingSignal } from '@/features/core/types'
 import './ButtonConfigModal.css'
 
 const COLOR_PRESETS = [
@@ -15,6 +15,11 @@ interface ButtonConfigModalProps {
   commands: IRCommand[]
   position: { row: number; col: number }
   existingButton?: LayoutButton | null
+  // Inline learning props (Phase 1.5)
+  onStartLearning?: () => void
+  onStopLearning?: () => void
+  onSaveNewCommand?: (name: string) => Promise<string | undefined>
+  pendingSignal?: PendingSignal | null
 }
 
 export function ButtonConfigModal({
@@ -25,10 +30,17 @@ export function ButtonConfigModal({
   commands,
   position,
   existingButton,
+  onStartLearning,
+  onStopLearning,
+  onSaveNewCommand,
+  pendingSignal,
 }: ButtonConfigModalProps) {
   const [selectedCommandId, setSelectedCommandId] = useState('')
   const [label, setLabel] = useState('')
   const [color, setColor] = useState(COLOR_PRESETS[4])
+  const [learningMode, setLearningMode] = useState(false)
+  const [newCommandName, setNewCommandName] = useState('')
+  const [savingCommand, setSavingCommand] = useState(false)
 
   useEffect(() => {
     if (existingButton) {
@@ -40,6 +52,9 @@ export function ButtonConfigModal({
       setLabel('')
       setColor(COLOR_PRESETS[4])
     }
+    setLearningMode(false)
+    setNewCommandName('')
+    setSavingCommand(false)
   }, [existingButton, isOpen])
 
   if (!isOpen) return null
@@ -65,6 +80,32 @@ export function ButtonConfigModal({
     }
   }
 
+  const handleStartLearning = () => {
+    setLearningMode(true)
+    onStartLearning?.()
+  }
+
+  const handleCancelLearning = () => {
+    setLearningMode(false)
+    setNewCommandName('')
+    onStopLearning?.()
+  }
+
+  const handleSaveNewCommand = async () => {
+    if (!newCommandName.trim() || !onSaveNewCommand) return
+    setSavingCommand(true)
+    const commandId = await onSaveNewCommand(newCommandName.trim())
+    setSavingCommand(false)
+    if (commandId) {
+      setSelectedCommandId(commandId)
+      if (!label) setLabel(newCommandName.trim())
+      setLearningMode(false)
+      setNewCommandName('')
+    }
+  }
+
+  const canLearn = !!onStartLearning && !!onSaveNewCommand
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content btn-config-modal" onClick={(e) => e.stopPropagation()}>
@@ -73,21 +114,86 @@ export function ButtonConfigModal({
           Row {position.row + 1}, Column {position.col + 1}
         </p>
 
-        <div className="btn-config-field">
-          <label htmlFor="command-select">Command</label>
-          <select
-            id="command-select"
-            value={selectedCommandId}
-            onChange={(e) => handleCommandChange(e.target.value)}
-          >
-            <option value="">Select a command...</option>
-            {commands.map((cmd) => (
-              <option key={cmd.id} value={cmd.id}>
-                {cmd.name} ({cmd.protocol})
-              </option>
-            ))}
-          </select>
-        </div>
+        {learningMode ? (
+          <div className="btn-config-learning">
+            {pendingSignal ? (
+              <div className="btn-config-learning-captured">
+                <div className="btn-config-learning-status success">Signal captured!</div>
+                <p className="btn-config-learning-info">
+                  {pendingSignal.protocol} | Address: {pendingSignal.address} | Command: {pendingSignal.command}
+                </p>
+                <div className="btn-config-field">
+                  <label htmlFor="new-command-name">Command Name</label>
+                  <input
+                    id="new-command-name"
+                    type="text"
+                    value={newCommandName}
+                    onChange={(e) => setNewCommandName(e.target.value)}
+                    placeholder="e.g., Power, Volume Up"
+                    autoFocus
+                  />
+                </div>
+                <div className="btn-config-learning-actions">
+                  <button
+                    className="btn-config-save"
+                    onClick={handleSaveNewCommand}
+                    disabled={!newCommandName.trim() || savingCommand}
+                    type="button"
+                  >
+                    {savingCommand ? 'Saving...' : 'Save Command'}
+                  </button>
+                  <button
+                    className="btn-config-cancel"
+                    onClick={handleCancelLearning}
+                    type="button"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="btn-config-learning-waiting">
+                <div className="btn-config-learning-status waiting">
+                  <span className="btn-config-learning-pulse"></span>
+                  Waiting for IR signal...
+                </div>
+                <p className="btn-config-learning-hint">Point your remote at the Pulsr receiver and press a button</p>
+                <button
+                  className="btn-config-cancel"
+                  onClick={handleCancelLearning}
+                  type="button"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="btn-config-field">
+            <label htmlFor="command-select">Command</label>
+            <select
+              id="command-select"
+              value={selectedCommandId}
+              onChange={(e) => handleCommandChange(e.target.value)}
+            >
+              <option value="">Select a command...</option>
+              {commands.map((cmd) => (
+                <option key={cmd.id} value={cmd.id}>
+                  {cmd.name} ({cmd.protocol})
+                </option>
+              ))}
+            </select>
+            {canLearn && (
+              <button
+                className="btn-config-learn-new"
+                onClick={handleStartLearning}
+                type="button"
+              >
+                + Learn New Command
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="btn-config-field">
           <label htmlFor="label-input">Label</label>
