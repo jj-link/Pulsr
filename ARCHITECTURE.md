@@ -197,10 +197,12 @@ docs/
 
 esp32/
 ├── feature_plans/
-│   ├── receiver_plan.md       # Design, Firestore schema, task list
-│   ├── receiver_progress.md   # Implementation checklist
-│   ├── transmitter_plan.md
-│   └── transmitter_progress.md
+│   ├── receiver/
+│   │   ├── receiver_plan.md       # Design, Firestore schema, task list
+│   │   └── receiver_progress.md   # Implementation checklist
+│   └── transmitter/
+│       ├── transmitter_plan.md
+│       └── transmitter_progress.md
 ├── src/
 │   ├── main.cpp            # Production firmware
 │   ├── receiver/            # Learning mode implementations
@@ -217,14 +219,18 @@ web/
 ├── ARCHITECTURE.md         # Web app tech stack and patterns
 ├── PROJECT_STRUCTURE.md    # Detailed file organization
 ├── feature_plans/
-│   ├── learning_plan.md       # Design, Firestore schema, task list
-│   ├── learning_progress.md   # Implementation checklist
-│   ├── remote_plan.md
-│   ├── remote_progress.md
-│   ├── designer_plan.md
-│   ├── designer_progress.md
-│   ├── chatbot_plan.md
-│   └── chatbot_progress.md
+│   ├── learning/
+│   │   ├── learning_plan.md       # Design, Firestore schema, task list
+│   │   └── learning_progress.md   # Implementation checklist
+│   ├── remote/
+│   │   ├── remote_plan.md
+│   │   └── remote_progress.md
+│   ├── designer/
+│   │   ├── designer_plan.md
+│   │   └── designer_progress.md
+│   └── chatbot/
+│       ├── chatbot_plan.md
+│       └── chatbot_progress.md
 ├── package.json            # Dependencies
 ├── src/
 │   └── features/

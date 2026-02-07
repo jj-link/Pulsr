@@ -7,14 +7,14 @@ A smart universal remote system built with ESP32, Firebase, and React.
 - [System Architecture](ARCHITECTURE.md) - System overview and design principles
 
 ### Embedded Software
-- [Receiver](esp32/feature_plans/receiver_plan.md) - IR signal learning
-- [Transmitter](esp32/feature_plans/transmitter_plan.md) - IR signal transmission
+- [Receiver](esp32/feature_plans/receiver/receiver_plan.md) - IR signal learning
+- [Transmitter](esp32/feature_plans/transmitter/transmitter_plan.md) - IR signal transmission
 
 ### Web App
-- [Learning UI](web/feature_plans/learning_plan.md) - Learning mode interface
-- [Remote UI](web/feature_plans/remote_plan.md) - Remote control buttons
-- [Designer UI](web/feature_plans/designer_plan.md) - Layout editor
-- [Chatbot UI](web/feature_plans/chatbot_plan.md) - AI assistant
+- [Learning UI](web/feature_plans/learning/learning_plan.md) - Learning mode interface
+- [Remote UI](web/feature_plans/remote/remote_plan.md) - Remote control buttons
+- [Designer UI](web/feature_plans/designer/designer_plan.md) - Layout editor
+- [Chatbot UI](web/feature_plans/chatbot/chatbot_plan.md) - AI assistant
 
 ## Getting Started
 
