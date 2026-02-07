@@ -51,7 +51,7 @@ Manages learning mode state and timeouts.
 - TIMEOUT: No signal after 30 seconds
 
 **Responsibilities:**
-- Listen for Firestore `device.isLearning` changes
+- React to Firestore `device.isLearning` changes (delivered via streaming)
 - Transition to LEARNING state
 - Capture one signal
 - Upload to Firestore via Firebase ESP32 SDK

@@ -44,11 +44,11 @@ graph TD
     UI_Remote -->|Writes Command Request| QueueService
     QueueService -->|Adds to Queue| Queue
     
-    Queue -->|Polls for Work| ESP_Tx
+    Queue -->|Streams Queue Items| ESP_Tx
     ESP_Tx -->|Emits IR| IR_LED((IR LED))
 
     UI_Learn -->|Sets Learning Mode| Devices
-    ESP_Rx -->|Listens for Mode| Devices
+    ESP_Rx -->|Streams Device State| Devices
     IR_Sensor((IR Sensor)) -->|Raw Signal| ESP_Rx
     ESP_Rx -->|Saves Code| Commands
 
@@ -75,9 +75,25 @@ graph TD
 | Action | Feature | Flow |
 | :--- | :--- | :--- |
 | **User Creates Remote** | Designer | UI Creates Layout → Save to DB |
-| **User Teaches Remote** | Learning | UI Sets Mode → ESP Reads IR → Save to DB |
-| **User Presses Button** | Remote | UI Writes to Queue → ESP Reads Queue → ESP Blinks LED |
+| **User Teaches Remote** | Learning | UI Sets Mode → ESP Streams Change → ESP Reads IR → Save to DB |
+| **User Presses Button** | Remote | UI Writes to Queue → ESP Streams Queue → ESP Emits IR |
 | **User Asks Help** | Chatbot | UI calls Cloud Function → AI Answers |
+
+## ESP32 ↔ Firestore Communication Strategy
+
+The ESP32 uses **Firestore real-time streaming** (Server-Sent Events) instead of polling. This is critical for staying within Firestore's free tier:
+
+| Approach | Reads/Day (per device) | Latency | Free Tier Impact |
+|----------|----------------------|---------|------------------|
+| Polling (2s) | ~43,200 | Up to 2s | 86% of 50k limit |
+| Polling (2s) × 2 streams | ~86,400 | Up to 2s | **Over limit** |
+| **Streaming** | ~1 per change | Instant | **Negligible** |
+
+**Streaming channels:**
+- **Device document stream** — `devices/{deviceId}` — receives `isLearning` and config changes instantly
+- **Queue collection stream** — `devices/{deviceId}/queue` — receives new transmission requests instantly
+
+Both channels use a single persistent HTTPS connection per stream. Firestore counts 1 read per document delivered, not per connection.
 
 ## Navigation Structure
 
@@ -86,9 +102,9 @@ The web app uses a **bottom tab bar** (mobile) / **sidebar** (desktop) for prima
 | Route | Screen | Feature |
 |-------|--------|-------|
 | `/` | Remote Control | Remote |
-| `/devices` | Device List | Designer |
-| `/designer/:id` | Layout Editor | Designer |
-| `/designer/:id/learn` | Learning Modal | Learning |
+| `/learn` | Learn Commands | Learning |
+| `/designer` | Layout Designer | Designer |
+| `/remote` | Remote Control | Remote |
 
 The **Chatbot Widget** is a floating button available on all screens.
 

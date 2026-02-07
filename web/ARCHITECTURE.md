@@ -128,7 +128,7 @@ graph LR
     User -->|HTTPS| Firebase
     Firebase -->|Serves| React[React App]
     React -->|WebSocket| Firestore
-    ESP32 -->|WiFi| Firestore
+    ESP32 -->|WiFi/Streaming| Firestore
     
     style ESP32 fill:#f9f,stroke:#333
     style Firebase fill:#ff9,stroke:#333
@@ -138,11 +138,11 @@ graph LR
 
 1. User opens app → Firebase Hosting serves React app
 2. User triggers learning mode → React writes to `devices/{id}.isLearning = true`
-3. ESP32 listens to Firestore → Detects `isLearning = true`
+3. ESP32 streams device document → Instantly detects `isLearning = true`
 4. ESP32 captures IR signal → Writes to `devices/{id}/commands/{commandId}`
 5. React listens to Firestore → Real-time update shows new command
 
-**No direct ESP32 ↔ Web communication.**
+**No direct ESP32 ↔ Web communication.** Both the web app (via Firestore SDK `onSnapshot`) and the ESP32 (via Firestore REST streaming / SSE) use real-time listeners instead of polling.
 
 ## Project Structure
 

@@ -1,7 +1,7 @@
 # Transmitter - ESP32 Status
 
-**Last Updated:** 2026-02-04  
-**Phase:** Core Classes Implementation (TDD)
+**Last Updated:** 2026-02-07  
+**Phase:** Streaming Migration
 
 ## Progress
 
@@ -27,18 +27,20 @@
   - [x] Production build verified (17.1% Flash, 14.8% RAM)
   - [ ] Hardware tested via `ir_transmitter_test`
 - [x] **QueueProcessor**
-  - [x] Firestore polling logic (~100ms)
+  - [x] Firestore polling logic (legacy, being replaced by streaming)
   - [x] FIFO queue ordering
   - [x] Status updates (PENDING → PROCESSING → SENT/FAILED)
   - [x] Command loading from Firestore
   - [x] Encoding and transmission integration
   - [x] Production build verified (17.1% Flash, 14.8% RAM)
-  - [ ] Retry logic with backoff (deferred)
+  - [x] Exponential backoff on errors (cap 60s, SSL reset after 5 failures)
+  - [ ] Migrate to Firestore real-time streaming (replace polling)
 
 ### Firebase Integration
-- [x] Queue collection polling
+- [x] Queue collection polling (legacy, being replaced by streaming)
 - [x] Command reference loading via commandId
 - [x] Status update writes with timestamps
+- [ ] Migrate to Firestore real-time streaming for queue
 - [ ] Latency optimization testing (<500ms target)
 
 ## Blockers
@@ -47,7 +49,8 @@ None - core transmitter implementation complete.
 
 ## Next Steps
 
-1. Wait for Decoder Firebase integration
+1. **Replace polling with Firestore streaming** for queue collection
+   - Eliminates ~43,200 reads/day per device from 2s polling
+   - Enables near-instant transmission (currently up to 2s delay)
 2. Create `ir_transmitter_test` hardware validation script
-3. Implement protocol encoders with TDD (mirror decoder tests)
-4. Build queue processor with polling logic
+3. Latency optimization testing (<500ms target)

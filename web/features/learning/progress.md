@@ -1,7 +1,7 @@
 # Learning - Web UI Status
 
-**Last Updated:** 2026-02-06  
-**Phase:** Complete (v1 — Core Functionality)
+**Last Updated:** 2026-02-07  
+**Phase:** Complete (v1 — Core Functionality + Designer Integration)
 
 ## Progress
 
@@ -58,10 +58,11 @@ No current blockers.
 
 ## Next Steps
 
-1. **Reuse LearningModal in Designer's ButtonConfigModal** — "Learn New Command" inline option (Phase 1.5 of Designer plan)
-2. Search/filter functionality for command list (v2)
-3. Add Playwright E2E tests (learn command, rename, delete)
-4. Consider shared device context with Remote/Designer via URL params
+1. ~~Reuse LearningModal in Designer's ButtonConfigModal~~ — **DONE** (Phase 1.5 — inline learning built into ButtonConfigModal)
+2. **Depends on ESP32 streaming migration** — inline learning UI works but ESP32 polling creates latency + burns Firestore reads
+3. Search/filter functionality for command list (v2)
+4. Add Playwright E2E tests (learn command, rename, delete)
+5. Consider shared device context with Remote/Designer via URL params
 
 ## Device Pairing Status
 

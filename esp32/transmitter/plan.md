@@ -43,14 +43,15 @@ Mirror of decoder functionality - converts command data to IR timing.
 Main transmission loop.
 
 **Responsibilities:**
-- Poll Firestore `queue/` collection (~100ms interval)
-- Fetch PENDING items in FIFO order
+- Stream Firestore `queue/` collection for new items (replaces polling)
+- Process PENDING items in FIFO order
 - Load command details via `commandId` reference
 - Encode command using appropriate protocol encoder
 - Transmit via `ESP32IRTransmitter`
 - Update status to SENT or FAILED
 - Set `processedAt` timestamp
 - Handle retry logic for failures
+- Exponential backoff on connection errors (cap 60s, SSL reset after 5 failures)
 
 ## Testing Strategy
 
@@ -78,8 +79,8 @@ Validation: Point at TV and verify it responds to transmitted signals.
 
 ## Performance Targets
 
-- **Latency:** <500ms from queue enqueue to IR emission
-- **Polling Frequency:** ~100ms
+- **Latency:** <500ms from queue enqueue to IR emission (streaming enables near-instant)
+- **Communication:** Firestore real-time streaming (SSE) — no polling overhead
 - **Range:** Sufficient for across-room control
 
 ## NeoPixel LED Feedback
@@ -97,12 +98,13 @@ Feedback is delivered via `TransmissionEventCallback` from `QueueProcessor` to `
 
 ## Current Status
 
-- **QueueProcessor:** Implemented with `listDocuments` polling, filters for `status: "pending"` items
+- **QueueProcessor:** Implemented with `listDocuments` polling (migrating to streaming)
 - **Status alignment:** Uses lowercase status values (`pending`, `processing`, `completed`, `failed`) matching web app
 - **Timestamps:** ISO 8601 format for Firestore REST API compatibility
 - **Command loading:** Handles both `stringValue` and `integerValue` for address/command fields
 - **NeoPixel feedback:** Wired via callback from QueueProcessor to main.cpp LED handler
-- **Poll interval:** 100ms
+- **Error recovery:** Exponential backoff (cap 60s) + SSL reset after 5 consecutive failures
+- **Migration planned:** Replace polling with Firestore streaming to reduce reads and improve latency
 
 ## Integration
 

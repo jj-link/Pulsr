@@ -1,7 +1,7 @@
 # Designer - Web UI Status
 
-**Last Updated:** 2026-02-06  
-**Phase:** Phase 1 Complete (Click-to-Place Grid)
+**Last Updated:** 2026-02-07  
+**Phase:** Phase 1.5 Complete (Inline Learning)
 
 ## Plan Evolution
 
@@ -32,6 +32,11 @@ This keeps the same Firestore schema — Phase 2 is a pure UX upgrade, no data m
   - [x] Label input
   - [x] Color selector (preset swatches)
   - [x] Delete button option
+  - [x] **Inline "Learn New Command" mode** (Phase 1.5)
+    - [x] Waiting state with pulse animation
+    - [x] Signal captured state with protocol info
+    - [x] Auto-assign learned command to button
+    - [x] Cleanup on modal close
   - [ ] ~~Icon picker~~ (deferred to Phase 2)
 - [ ] **GridCell** (inlined in DesignerPage — extract if needed)
 - [ ] ~~**CommandPicker**~~ (replaced by simple dropdown in ButtonConfigModal)
@@ -59,7 +64,7 @@ No current blockers.
 
 ## Next Steps
 
-1. **Phase 1.5: Inline Learning in ButtonConfigModal** — add "Learn New Command" option so users can capture IR signals directly while building a layout (reuses `LearningModal` logic)
+1. **BLOCKED: ESP32 streaming migration** — inline learning UI is built but ESP32 still uses polling (2s delay, burns Firestore reads). Streaming will make learning mode activation instant.
 2. Extract `GridCell` component from `DesignerPage` (optional cleanup)
 3. Add integration tests for save/load round-trip
 4. Add Playwright E2E tests (click cell, configure button, save layout)

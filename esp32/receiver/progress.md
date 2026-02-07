@@ -1,7 +1,7 @@
 # Receiver - ESP32 Status
 
-**Last Updated:** 2026-02-03  
-**Phase:** Core Classes Implementation
+**Last Updated:** 2026-02-07  
+**Phase:** Streaming Migration
 
 ## Progress
 
@@ -37,7 +37,8 @@
 - [x] WiFi connection manager with auto-reconnect
 - [x] Device authentication (email/password)
 - [x] Upload commands to Firestore (`devices/{deviceId}/commands/{commandId}`)
-- [x] Poll for `isLearning` state changes (2-second interval with callbacks)
+- [x] Poll for `isLearning` state changes (legacy, being replaced by streaming)
+- [ ] Migrate to Firestore real-time streaming for `isLearning` state changes
 - [x] FirebaseManager class with state management
 - [x] Integration with LearningStateMachine callbacks in main.cpp
 - [x] Production firmware complete and verified (17.1% Flash, 14.8% RAM)
@@ -49,8 +50,8 @@ None
 
 ## Next Steps
 
-1. Configure Unity testing framework in `platformio.ini`
-2. Create `test/test_protocol_decoder/` directory
-3. Write first failing test for NEC decoder
-4. Implement `IRLibProtocolDecoder::decodeNEC()` to pass test
-5. Iterate on Samsung and Sony protocols
+1. **Replace polling with Firestore streaming** for device document (isLearning state)
+   - Eliminates ~43,200 reads/day per device from 2s polling
+   - Enables instant learning mode activation (currently up to 2s delay)
+2. Add error logging to `checkLearningMode` (done — diagnostic build)
+3. Hardware testing with real Firebase project and credentials
