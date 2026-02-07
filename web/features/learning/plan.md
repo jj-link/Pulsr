@@ -239,7 +239,23 @@ Industry-standard setup for end users:
 ### Current (Temporary)
 Hardcoded Firebase credentials in `esp32/include/config.h` for testing.
 
-### Phase 3: Firebase Secrets (Production)
+### Phase 3: RTDB Security Rules (Multi-User)
+Harden Realtime Database rules with admin/owner split:
+
+**Current:** `auth != null` (any authenticated user can read/write any device)
+
+**Target rules:**
+- Admin account (dev credentials) gets full access to all devices
+- Individual users can only read/write devices where `ownerId` matches their UID
+- Any authenticated user can create a new device node (first write sets `ownerId`)
+
+**Implementation:**
+1. Add admin UID to RTDB rules
+2. Web app writes `ownerId` to RTDB `/devices/{deviceId}/ownerId` on device creation
+3. ESP32 authenticates as admin, so it retains full access
+4. Apply same pattern to Firestore rules (replace `allow read, write: if true`)
+
+### Phase 4: Firebase Secrets (Production)
 Remove hardcoded credentials, use secure token exchange:
 
 **Implementation:**

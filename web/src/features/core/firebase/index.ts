@@ -1,2 +1,2 @@
-export { initializeFirebase, getDb, getFirebaseAuth, getFirebaseFunctions } from './config'
-export { FirebaseProvider, useFirebase, useDb, useAuth, useFunctions } from './FirebaseProvider'
+export { initializeFirebase, getDb, getRealtimeDb, getFirebaseAuth, getFirebaseFunctions } from './config'
+export { FirebaseProvider, useFirebase, useDb, useRealtimeDb, useAuth, useFunctions } from './FirebaseProvider'

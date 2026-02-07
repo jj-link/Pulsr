@@ -1,10 +1,14 @@
 #include "utils/FirebaseManager.h"
 
+// Static singleton reference for stream callbacks
+FirebaseManager* FirebaseManager::instance = nullptr;
+
 FirebaseManager::FirebaseManager(
     const char* wifiSSID,
     const char* wifiPassword,
     const char* apiKey,
     const char* projectId,
+    const char* databaseUrl,
     const char* userEmail,
     const char* userPassword,
     const char* deviceId
@@ -12,15 +16,21 @@ FirebaseManager::FirebaseManager(
     wifiPassword(wifiPassword),
     apiKey(apiKey),
     projectId(projectId),
+    databaseUrl(databaseUrl),
     userEmail(userEmail),
     userPassword(userPassword),
     deviceId(deviceId),
     state(FirebaseState::DISCONNECTED),
     lastConnectionAttempt(0),
-    lastLearningCheck(0),
+    streamStarted(false),
+    pendingLearningChange(false),
+    pendingLearningState(false),
+    pendingQueueNotify(false),
     lastLearningState(false),
-    learningStateCallback(nullptr)
+    learningStateCallback(nullptr),
+    queueNotifyCallback(nullptr)
 {
+    instance = this;
 }
 
 bool FirebaseManager::begin() {
@@ -34,12 +44,13 @@ bool FirebaseManager::begin() {
     
     // Configure Firebase
     config.api_key = apiKey;
+    config.database_url = databaseUrl;
     auth.user.email = userEmail;
     auth.user.password = userPassword;
     
     // Initialize Firebase
     Firebase.begin(&config, &auth);
-    Firebase.reconnectWiFi(true);
+    Firebase.reconnectWiFi(false);  // We handle WiFi reconnection manually
     
     Serial.println("[Firebase] Configuration complete");
     state = FirebaseState::FIREBASE_AUTHENTICATING;
@@ -53,12 +64,19 @@ void FirebaseManager::update() {
         if (state != FirebaseState::ERROR_WIFI_FAILED) {
             Serial.println("[Firebase] WiFi connection lost");
             state = FirebaseState::ERROR_WIFI_FAILED;
+            // Cleanly stop the RTDB stream so SSL state doesn't corrupt
+            if (streamStarted) {
+                Firebase.RTDB.endStream(&streamFbdo);
+                streamFbdo.clear();
+                streamStarted = false;
+                Serial.println("[RTDB] Stream stopped (WiFi lost)");
+            }
         }
         
-        // Attempt reconnection every 30 seconds
-        if (millis() - lastConnectionAttempt > 30000) {
+        // Attempt reconnection every 10 seconds
+        if (millis() - lastConnectionAttempt > 10000) {
             Serial.println("[Firebase] Attempting WiFi reconnection...");
-            connectWiFi();
+            reconnectWiFi();
             lastConnectionAttempt = millis();
         }
         return;
@@ -70,10 +88,97 @@ void FirebaseManager::update() {
         state = FirebaseState::FIREBASE_READY;
     }
     
-    // Poll for learning mode changes every 2 seconds when ready
-    if (isReady() && millis() - lastLearningCheck > 2000) {
-        checkLearningMode();
-        lastLearningCheck = millis();
+    // Start RTDB stream once ready
+    if (isReady() && !streamStarted) {
+        beginDeviceStream();
+    }
+    
+    // Process pending stream events (thread-safe: flags set by stream callback)
+    if (pendingLearningChange) {
+        pendingLearningChange = false;
+        bool newState = pendingLearningState;
+        
+        if (newState != lastLearningState) {
+            Serial.print("[RTDB] Learning mode changed: ");
+            Serial.println(newState ? "ON" : "OFF");
+            lastLearningState = newState;
+            
+            if (learningStateCallback) {
+                learningStateCallback(newState);
+            }
+        }
+    }
+    
+    if (pendingQueueNotify) {
+        pendingQueueNotify = false;
+        Serial.println("[RTDB] Queue notification received");
+        
+        if (queueNotifyCallback) {
+            queueNotifyCallback();
+        }
+    }
+}
+
+bool FirebaseManager::beginDeviceStream() {
+    String streamPath = getRtdbDevicePath();
+    
+    Serial.print("[RTDB] Starting stream on: ");
+    Serial.println(streamPath);
+    
+    // Clear any stale SSL/connection state before starting
+    streamFbdo.clear();
+    
+    if (!Firebase.RTDB.beginStream(&streamFbdo, streamPath.c_str())) {
+        Serial.print("[RTDB] Stream begin failed: ");
+        Serial.println(streamFbdo.errorReason());
+        return false;
+    }
+    
+    Firebase.RTDB.setStreamCallback(&streamFbdo, onStreamData, onStreamTimeout);
+    
+    streamStarted = true;
+    Serial.println("[RTDB] Stream started successfully");
+    return true;
+}
+
+void FirebaseManager::onStreamData(FirebaseStream data) {
+    if (!instance) return;
+    
+    String path = data.dataPath();
+    
+    if (path == "/isLearning" || path == "isLearning") {
+        instance->pendingLearningState = data.boolData();
+        instance->pendingLearningChange = true;
+    } else if (path == "/queueNotify" || path == "queueNotify") {
+        // Individual field update — RTDB only fires this when the value
+        // actually changed in the database, so always process it
+        instance->pendingQueueNotify = true;
+    } else if (path == "/") {
+        // Initial stream event sends the entire node — parse children
+        FirebaseJson json = data.jsonObject();
+        FirebaseJsonData result;
+        
+        if (json.get(result, "isLearning")) {
+            instance->pendingLearningState = result.boolValue;
+            instance->pendingLearningChange = true;
+        }
+        // Store initial queueNotify value but DON'T trigger a poll —
+        // we only care about future changes, not the current value
+        if (json.get(result, "queueNotify")) {
+            instance->lastQueueNotifyValue = result.stringValue;
+        }
+    }
+}
+
+void FirebaseManager::onStreamTimeout(bool timeout) {
+    if (timeout) {
+        Serial.println("[RTDB] Stream timeout - will auto-reconnect");
+        // End and clear the stream so beginDeviceStream() gets a clean slate
+        Firebase.RTDB.endStream(&instance->streamFbdo);
+        instance->streamFbdo.clear();
+    }
+    if (instance) {
+        instance->streamStarted = false;
     }
 }
 
@@ -96,15 +201,34 @@ bool FirebaseManager::connectWiFi() {
         Serial.print(WiFi.RSSI(i));
         Serial.println(" dBm)");
     }
+    WiFi.scanDelete();
     
+    return startWiFiConnection();
+}
+
+bool FirebaseManager::reconnectWiFi() {
+    // Full radio reset for clean reconnection
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
+    delay(500);
+    WiFi.mode(WIFI_STA);
+    delay(100);
+    
+    Serial.print("[WiFi] Reconnecting to: '");
+    Serial.print(wifiSSID);
+    Serial.println("'");
+    
+    return startWiFiConnection();
+}
+
+bool FirebaseManager::startWiFiConnection() {
     Serial.print("[WiFi] Connecting to: '");
     Serial.print(wifiSSID);
     Serial.println("'");
-    Serial.print("[WiFi] Password length: ");
-    Serial.println(strlen(wifiPassword));
     
     state = FirebaseState::WIFI_CONNECTING;
     WiFi.begin(wifiSSID, wifiPassword);
+    WiFi.setSleep(false);  // Disable WiFi power saving to prevent disconnects
     WiFi.setTxPower(WIFI_POWER_8_5dBm);  // Reduce TX power to fix auth issues with some routers
     
     unsigned long startAttempt = millis();
@@ -117,7 +241,6 @@ bool FirebaseManager::connectWiFi() {
     if (WiFi.status() != WL_CONNECTED) {
         Serial.print("[WiFi] Connection failed! Status code: ");
         Serial.println(WiFi.status());
-        // Status codes: 0=IDLE, 1=NO_SSID_AVAIL, 2=SCAN_COMPLETED, 3=CONNECTED, 4=CONNECT_FAILED, 5=CONNECTION_LOST, 6=DISCONNECTED
         return false;
     }
     
@@ -191,51 +314,14 @@ bool FirebaseManager::setLearningMode(bool isLearning) {
     }
 }
 
-bool FirebaseManager::checkLearningMode() {
-    if (!isReady()) {
-        return false;
-    }
-    
-    String documentPath = getDevicePath();
-    
-    if (Firebase.Firestore.getDocument(&fbdo, projectId, "", documentPath.c_str(), "isLearning")) {
-        FirebaseJson json;
-        json.setJsonData(fbdo.payload());
-        
-        FirebaseJsonData result;
-        if (json.get(result, "fields/isLearning/booleanValue")) {
-            bool currentLearningState = result.boolValue;
-            
-            // Check if state changed
-            if (currentLearningState != lastLearningState) {
-                Serial.print("[Firebase] Learning mode changed: ");
-                Serial.println(currentLearningState ? "ON" : "OFF");
-                
-                lastLearningState = currentLearningState;
-                
-                // Notify callback
-                if (learningStateCallback) {
-                    learningStateCallback(currentLearningState);
-                }
-            }
-            
-            return true;
-        } else {
-            Serial.println("[Firebase] checkLearningMode: isLearning field not found in response");
-            Serial.println(fbdo.payload().c_str());
-        }
-    } else {
-        Serial.print("[Firebase] checkLearningMode failed: ");
-        Serial.println(fbdo.errorReason());
-    }
-    
-    return false;
-}
-
 String FirebaseManager::getDevicePath() const {
     return String("devices/") + deviceId;
 }
 
 String FirebaseManager::getCommandsPath() const {
     return getDevicePath() + "/commands";
+}
+
+String FirebaseManager::getRtdbDevicePath() const {
+    return String("/devices/") + deviceId;
 }

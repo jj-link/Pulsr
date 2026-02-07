@@ -16,8 +16,11 @@ enum class FirebaseState {
     ERROR_AUTH_FAILED
 };
 
-// Callback for isLearning state changes from Firestore
+// Callback for isLearning state changes
 using LearningStateCallback = std::function<void(bool isLearning)>;
+
+// Callback for queue notification (new item enqueued)
+using QueueNotifyCallback = std::function<void()>;
 
 class FirebaseManager {
 public:
@@ -26,6 +29,7 @@ public:
         const char* wifiPassword,
         const char* apiKey,
         const char* projectId,
+        const char* databaseUrl,
         const char* userEmail,
         const char* userPassword,
         const char* deviceId
@@ -37,14 +41,19 @@ public:
     bool isReady() const { return state == FirebaseState::FIREBASE_READY; }
     FirebaseState getState() const { return state; }
     
+    // RTDB streaming (replaces Firestore polling)
+    bool beginDeviceStream();
+    
     // Firestore operations
     bool uploadSignal(const DecodedSignal& signal, const String& commandName);
     bool setLearningMode(bool isLearning);
-    bool checkLearningMode();
     
     // Callbacks
     void onLearningStateChange(LearningStateCallback callback) { 
         learningStateCallback = callback; 
+    }
+    void onQueueNotify(QueueNotifyCallback callback) {
+        queueNotifyCallback = callback;
     }
 
 private:
@@ -53,27 +62,45 @@ private:
     const char* wifiPassword;
     const char* apiKey;
     const char* projectId;
+    const char* databaseUrl;
     const char* userEmail;
     const char* userPassword;
     const char* deviceId;
     
     // Firebase objects
-    FirebaseData fbdo;
+    FirebaseData fbdo;           // For Firestore operations
+    FirebaseData streamFbdo;     // Dedicated for RTDB streaming
     FirebaseAuth auth;
     FirebaseConfig config;
     
     // State
     FirebaseState state;
     unsigned long lastConnectionAttempt;
-    unsigned long lastLearningCheck;
+    bool streamStarted;
+    
+    // Thread-safe flags set by RTDB stream callback, consumed by update()
+    volatile bool pendingLearningChange;
+    volatile bool pendingLearningState;
+    volatile bool pendingQueueNotify;
     bool lastLearningState;
+    String lastQueueNotifyValue;
+    
+    // Callbacks
     LearningStateCallback learningStateCallback;
+    QueueNotifyCallback queueNotifyCallback;
+    
+    // Stream callbacks (static so they can be passed to library)
+    static FirebaseManager* instance;  // Singleton ref for static callbacks
+    static void onStreamData(FirebaseStream data);
+    static void onStreamTimeout(bool timeout);
     
     // Helper methods
-    bool connectWiFi();
-    bool authenticateFirebase();
+    bool connectWiFi();        // Initial connection with network scan
+    bool reconnectWiFi();      // Reconnection with full radio reset
+    bool startWiFiConnection(); // Shared connection logic
     String getDevicePath() const;
     String getCommandsPath() const;
+    String getRtdbDevicePath() const;
 };
 
 #endif

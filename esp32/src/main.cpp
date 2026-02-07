@@ -52,6 +52,7 @@ FirebaseManager firebaseManager(
     WIFI_PASSWORD,
     FIREBASE_API_KEY,
     FIREBASE_PROJECT_ID,
+    FIREBASE_DATABASE_URL,
     FIREBASE_USER_EMAIL,
     FIREBASE_USER_PASSWORD,
     DEVICE_ID
@@ -208,20 +209,25 @@ void setup() {
     learningStateMachine.onStateChange(onLearningStateChanged);
     learningStateMachine.onSignalCapture(onSignalCaptured);
     firebaseManager.onLearningStateChange(onFirebaseLearningModeChanged);
+    firebaseManager.onQueueNotify([]() {
+        if (queueProcessor != nullptr) {
+            queueProcessor->processNow();
+        }
+    });
     
     // Connect to Firebase
     Serial.println("[Pulsr] Connecting to Firebase...");
     if (firebaseManager.begin()) {
         Serial.println("[Pulsr] Firebase connection initiated");
         
-        // Initialize queue processor after Firebase is ready
+        // Initialize queue processor (RTDB stream triggers immediate polls;
+        // fallback polling every 30s as safety net)
         queueProcessor = new QueueProcessor(
             &queueFbdo,
             FIREBASE_PROJECT_ID,
             DEVICE_ID,
             &protocolEncoder,
-            &irTransmitter,
-            2000  // 2s poll interval
+            &irTransmitter
         );
         queueProcessor->onTransmissionEvent(onTransmissionEvent);
         Serial.println("[Pulsr] Queue processor initialized");
@@ -237,14 +243,15 @@ void setup() {
 // ============== Main Loop ==============
 
 void loop() {
-    // Update Firebase connection and poll for learning mode changes
+    // Update Firebase connection and process RTDB stream events
     firebaseManager.update();
     
     // Update learning state machine (handles timeouts and signal capture)
     learningStateMachine.update();
     
-    // Update queue processor (polls Firestore queue and transmits commands)
-    if (queueProcessor != nullptr && firebaseManager.getState() == FirebaseState::FIREBASE_READY) {
+    // Update queue processor (event-driven via RTDB, fallback poll every 30s)
+    // Only require WiFi connected — QueueProcessor has its own error handling with backoff
+    if (queueProcessor != nullptr && WiFi.status() == WL_CONNECTED) {
         queueProcessor->update();
     }
     

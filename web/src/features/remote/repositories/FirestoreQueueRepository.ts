@@ -13,9 +13,10 @@ import {
   Timestamp,
   serverTimestamp,
 } from 'firebase/firestore'
+import { ref, set, Database, serverTimestamp as rtdbServerTimestamp } from 'firebase/database'
 
 export class FirestoreQueueRepository implements IQueueRepository {
-  constructor(private db: Firestore) {}
+  constructor(private db: Firestore, private rtdb?: Database) {}
 
   async getByDevice(deviceId: string): Promise<QueueItem[]> {
     const queueRef = collection(this.db, `devices/${deviceId}/queue`)
@@ -32,6 +33,10 @@ export class FirestoreQueueRepository implements IQueueRepository {
       status: 'pending',
       createdAt: serverTimestamp(),
     })
+    // Notify ESP32 via RTDB that a new queue item is available
+    if (this.rtdb) {
+      await set(ref(this.rtdb, `devices/${deviceId}/queueNotify`), rtdbServerTimestamp())
+    }
     return {
       id: `${deviceId}/${docRef.id}`,
       deviceId,

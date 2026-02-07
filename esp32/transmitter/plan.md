@@ -98,13 +98,14 @@ Feedback is delivered via `TransmissionEventCallback` from `QueueProcessor` to `
 
 ## Current Status
 
-- **QueueProcessor:** Implemented with `listDocuments` polling (migrating to streaming)
+- **QueueProcessor:** Event-driven via RTDB `queueNotify` stream + 30s fallback poll
+- **RTDB streaming:** ESP32 streams `/devices/{deviceId}` for `isLearning` and `queueNotify` signals
+- **Web writes:** Enqueue writes Firestore queue item + bumps RTDB `queueNotify` timestamp
 - **Status alignment:** Uses lowercase status values (`pending`, `processing`, `completed`, `failed`) matching web app
 - **Timestamps:** ISO 8601 format for Firestore REST API compatibility
 - **Command loading:** Handles both `stringValue` and `integerValue` for address/command fields
 - **NeoPixel feedback:** Wired via callback from QueueProcessor to main.cpp LED handler
 - **Error recovery:** Exponential backoff (cap 60s) + SSL reset after 5 consecutive failures
-- **Migration planned:** Replace polling with Firestore streaming to reduce reads and improve latency
 
 ## Integration
 

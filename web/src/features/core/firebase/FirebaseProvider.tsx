@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, ReactNode } from 'react'
 import { FirebaseApp } from 'firebase/app'
 import { Firestore } from 'firebase/firestore'
+import { Database } from 'firebase/database'
 import { Auth } from 'firebase/auth'
 import { Functions } from 'firebase/functions'
 import { initializeFirebase } from './config'
@@ -8,6 +9,7 @@ import { initializeFirebase } from './config'
 interface FirebaseContextValue {
   app: FirebaseApp
   db: Firestore
+  rtdb: Database
   auth: Auth
   functions: Functions
 }
@@ -55,4 +57,9 @@ export function useAuth(): Auth {
 export function useFunctions(): Functions {
   const { functions } = useFirebase()
   return functions
+}
+
+export function useRealtimeDb(): Database {
+  const { rtdb } = useFirebase()
+  return rtdb
 }

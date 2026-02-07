@@ -6,15 +6,16 @@ QueueProcessor::QueueProcessor(
     const char* deviceId,
     IProtocolEncoder* encoder,
     IIRTransmitter* transmitter,
-    uint32_t pollIntervalMs
+    uint32_t fallbackPollMs
 ) : fbdo(fbdo),
     projectId(projectId),
     deviceId(deviceId),
     encoder(encoder),
     transmitter(transmitter),
-    pollIntervalMs(pollIntervalMs),
+    fallbackPollMs(fallbackPollMs),
     lastPollTime(0),
     processing(false),
+    pollRequested(false),
     consecutiveErrors(0),
     backoffUntil(0),
     totalSent(0),
@@ -23,18 +24,26 @@ QueueProcessor::QueueProcessor(
 {
 }
 
+void QueueProcessor::processNow() {
+    pollRequested = true;
+}
+
 void QueueProcessor::update() {
     // Respect backoff period after errors
     if (backoffUntil > 0 && millis() < backoffUntil) {
         return;
     }
     
-    // Check if it's time to poll
-    if (millis() - lastPollTime < pollIntervalMs) {
+    // Check if we should poll: either RTDB notified us or fallback timer expired
+    bool shouldPoll = pollRequested || (millis() - lastPollTime >= fallbackPollMs);
+    if (!shouldPoll) {
         return;
     }
     
+    pollRequested = false;
     lastPollTime = millis();
+    
+    Serial.println("[Queue] Polling for pending items...");
     
     // Poll for pending queue items
     if (!processing) {
@@ -62,7 +71,7 @@ void QueueProcessor::resetConnection() {
 
 uint32_t QueueProcessor::getBackoffDelay() const {
     // Exponential backoff: 2s, 4s, 8s, 16s, 32s, capped at 60s
-    uint32_t delay = pollIntervalMs * (1 << min(consecutiveErrors, (uint32_t)5));
+    uint32_t delay = fallbackPollMs * (1 << min(consecutiveErrors, (uint32_t)5));
     return min(delay, MAX_BACKOFF_MS);
 }
 
@@ -83,6 +92,7 @@ bool QueueProcessor::pollQueue() {
     // Check if there are any documents
     FirebaseJsonData documentsArray;
     if (!json.get(documentsArray, "documents")) {
+        Serial.println("[Queue] No documents found in queue");
         return true;  // No documents in queue — not an error
     }
     

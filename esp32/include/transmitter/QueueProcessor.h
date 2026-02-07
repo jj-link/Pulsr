@@ -34,10 +34,11 @@ public:
         const char* deviceId,
         IProtocolEncoder* encoder,
         IIRTransmitter* transmitter,
-        uint32_t pollIntervalMs = 2000
+        uint32_t fallbackPollMs = 5000
     );
 
     void update();  // Call in main loop
+    void processNow();  // Trigger immediate poll (called from RTDB stream callback)
     bool isProcessing() const { return processing; }
     
     // Callbacks
@@ -56,9 +57,10 @@ private:
     IProtocolEncoder* encoder;
     IIRTransmitter* transmitter;
     
-    uint32_t pollIntervalMs;
+    uint32_t fallbackPollMs;
     unsigned long lastPollTime;
     bool processing;
+    volatile bool pollRequested;  // Set by processNow(), consumed by update()
     
     // Error recovery
     uint32_t consecutiveErrors;

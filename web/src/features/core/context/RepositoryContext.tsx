@@ -20,12 +20,12 @@ interface RepositoryProviderProps {
 }
 
 export function RepositoryProvider({ children }: RepositoryProviderProps) {
-  const { db } = useFirebase()
+  const { db, rtdb } = useFirebase()
 
   const repositories: RepositoryContextValue = {
     commandRepository: new FirestoreCommandRepository(db),
-    deviceRepository: new FirestoreDeviceRepository(db),
-    queueRepository: new FirestoreQueueRepository(db),
+    deviceRepository: new FirestoreDeviceRepository(db, rtdb),
+    queueRepository: new FirestoreQueueRepository(db, rtdb),
     layoutRepository: new FirestoreLayoutRepository(db),
   }
 
