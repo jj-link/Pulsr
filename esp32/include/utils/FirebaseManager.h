@@ -27,7 +27,7 @@ struct PendingCommand {
     uint16_t bits;
 };
 
-// Callback for command dispatch (replaces queue polling)
+// Callback for command dispatch via RTDB pendingCommand
 using CommandCallback = std::function<void(const PendingCommand& cmd)>;
 
 class FirebaseManager {

@@ -1,15 +1,13 @@
 import { createContext, useContext, ReactNode } from 'react'
-import { ICommandRepository, IDeviceRepository, IQueueRepository, ILayoutRepository } from '@/features/core/types/repositories'
+import { ICommandRepository, IDeviceRepository, ILayoutRepository } from '@/features/core/types/repositories'
 import { FirestoreCommandRepository } from '@/features/learning/repositories/FirestoreCommandRepository'
 import { FirestoreDeviceRepository } from '@/features/learning/repositories/FirestoreDeviceRepository'
-import { FirestoreQueueRepository } from '@/features/remote/repositories/FirestoreQueueRepository'
 import { FirestoreLayoutRepository } from '@/features/designer/repositories/FirestoreLayoutRepository'
 import { useFirebase } from '@/features/core/firebase'
 
 interface RepositoryContextValue {
   commandRepository: ICommandRepository
   deviceRepository: IDeviceRepository
-  queueRepository: IQueueRepository
   layoutRepository: ILayoutRepository
 }
 
@@ -25,7 +23,6 @@ export function RepositoryProvider({ children }: RepositoryProviderProps) {
   const repositories: RepositoryContextValue = {
     commandRepository: new FirestoreCommandRepository(db),
     deviceRepository: new FirestoreDeviceRepository(db, rtdb),
-    queueRepository: new FirestoreQueueRepository(db, rtdb),
     layoutRepository: new FirestoreLayoutRepository(db),
   }
 

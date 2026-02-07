@@ -14,8 +14,7 @@ The component architecture is simpler than planned — logic is inlined in `Remo
 ### Foundation
 - [x] React app scaffold (shared)
 - [x] Firebase SDK setup (shared)
-- [x] `FirestoreQueueRepository` (legacy — being replaced by RTDB dispatch)
-- [ ] `RTDBCommandDispatch` (write `pendingCommand` to RTDB)
+- [x] RTDB command dispatch (write `pendingCommand` directly from RemotePage)
 
 ### Navigation
 - [x] **Nav dropdown** (`AppLayout.tsx`) — "Remote ▼" lists devices, navigates to `/remote/:deviceId`
@@ -24,20 +23,17 @@ The component architecture is simpler than planned — logic is inlined in `Remo
 
 ### Components (inlined in RemotePage)
 - [x] **Layout grid** — renders buttons from Designer layout (CSS grid, label + color)
-- [x] **Button click → enqueue** — adds to Firestore queue on click (legacy)
-- [x] **Recent transmissions list** — shows last 5 queue items with status badges (legacy)
+- [x] **Button click → RTDB dispatch** — writes `pendingCommand` to RTDB on click
 - [x] **Test Transmit panel** — collapsible debug panel listing all learned commands with Send buttons
-- [ ] **Button click → RTDB dispatch** — write `pendingCommand` directly to RTDB on click
-- [ ] **Remove Firestore queue writes** — replace `FirestoreQueueRepository` with `RTDBCommandDispatch`
+- [x] **Removed Firestore queue** — no more FirestoreQueueRepository, QueueItem, useQueue
 - [ ] Optimistic "pressed" state on button click
 - [ ] Error handling with retry option
 
 ### Testing
-- [ ] Unit tests for button/queue logic
-- [ ] Integration tests with mock Firestore
+- [ ] Unit tests for dispatch logic
 - [ ] Playwright E2E tests
 
-**Test count: 0 Remote-specific tests (queue repo covered by shared tests)**
+**Test count: 0 Remote-specific tests**
 
 ## Blockers
 
@@ -45,9 +41,7 @@ None.
 
 ## Next Steps
 
-1. **Replace `FirestoreQueueRepository` with `RTDBCommandDispatch`** — write `pendingCommand` to RTDB instead of Firestore queue
-2. **Update `RemotePage.tsx`** to use new dispatch (load command details from Firestore, send via RTDB)
-3. Add optimistic press feedback (button shows "sending" state briefly)
-4. Remove or hide Test Transmit panel behind a dev flag
-5. Add unit tests for dispatch logic
-6. Add Playwright E2E tests
+1. Add optimistic press feedback (button shows "sending" state briefly)
+2. Remove or hide Test Transmit panel behind a dev flag
+3. Add unit tests for dispatch logic
+4. Add Playwright E2E tests

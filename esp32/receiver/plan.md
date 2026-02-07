@@ -45,7 +45,7 @@ Identifies and decodes known protocols.
 Manages learning mode state and timeouts.
 
 **States:**
-- IDLE: Normal operation (listening for queue)
+- IDLE: Normal operation (waiting for commands via RTDB)
 - LEARNING: Waiting for IR signal
 - CAPTURED: Signal received, uploading to Firestore
 - TIMEOUT: No signal after 30 seconds

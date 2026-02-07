@@ -26,25 +26,17 @@
   - [x] Carrier frequency configuration (38kHz)
   - [x] Production build verified (17.1% Flash, 14.8% RAM)
   - [ ] Hardware tested via `ir_transmitter_test`
-- [x] **QueueProcessor** (legacy — being replaced by RTDB direct dispatch)
-  - [x] Firestore polling logic (legacy)
-  - [x] FIFO queue ordering (legacy)
-  - [x] Status updates (legacy)
-  - [x] Command loading from Firestore (legacy)
-  - [x] Encoding and transmission integration
-  - [x] Exponential backoff on errors (legacy)
-- [ ] **RTDB Command Dispatch** (replacing QueueProcessor)
-  - [ ] Handle `pendingCommand` in RTDB stream callback
-  - [ ] Extract protocol/address/command/bits from stream data
-  - [ ] Encode and transmit IR via existing ProtocolEncoders + ESP32IRTransmitter
-  - [ ] Clear `pendingCommand` from RTDB after transmission
-  - [ ] Remove QueueProcessor and Firestore queue dependencies
+- [x] **RTDB Command Dispatch**
+  - [x] Handle `pendingCommand` in RTDB stream callback
+  - [x] Extract protocol/address/command/bits from stream data
+  - [x] Encode and transmit IR via ProtocolEncoders + ESP32IRTransmitter
+  - [x] Clear `pendingCommand` from RTDB after transmission
+  - [x] Removed QueueProcessor and Firestore queue code
 
 ### Firebase Integration
 - [x] RTDB streaming for `isLearning` (working, ~100ms latency)
-- [ ] RTDB streaming for `pendingCommand` (in progress)
-- [ ] Remove Firestore queue reads/writes from ESP32
-- [ ] Latency optimization testing (~100ms target)
+- [x] RTDB streaming for `pendingCommand` (working, ~100ms latency)
+- [x] Removed Firestore queue reads/writes from ESP32
 
 ## Blockers
 
@@ -52,8 +44,6 @@ None.
 
 ## Next Steps
 
-1. **Implement RTDB `pendingCommand` dispatch** — replicate `isLearning` pattern for commands
-2. **Remove QueueProcessor** and all Firestore queue polling code
-3. **Update web remote** to write `pendingCommand` to RTDB instead of Firestore queue
-4. Create `ir_transmitter_test` hardware validation script
-5. Latency optimization testing (~100ms target)
+1. Create `ir_transmitter_test` hardware validation script
+2. Add unit tests for protocol encoders
+3. Monitor WiFi stability in long-running sessions

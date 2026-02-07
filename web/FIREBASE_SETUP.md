@@ -224,11 +224,6 @@ devices/
         - command: string
         - capturedAt: timestamp
     
-    queue/
-      {queueId}/
-        - commandId: string
-        - status: string
-        - createdAt: timestamp
 
 knowledgeBase/
   {articleId}/

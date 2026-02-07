@@ -261,4 +261,4 @@ Writes:
 
 Triggers:
 - Learning mode on ESP32 when using inline learning (sets `device.isLearning = true`)
-- Transmission track when button clicked on Remote page (uses IQueueRepository)
+- Transmission track when button clicked on Remote page (writes pendingCommand to RTDB)

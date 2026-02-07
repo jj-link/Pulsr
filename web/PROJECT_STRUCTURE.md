@@ -117,22 +117,16 @@ features/remote/
 ├── components/
 │   ├── RemoteButton.tsx           # Individual IR button
 │   ├── RemoteGrid.tsx             # Button layout container
-│   ├── QueueMonitor.tsx           # Queue status display
 │   └── index.ts
 ├── hooks/
-│   ├── useQueue.ts                # Queue operations
-│   ├── useTransmission.ts         # Enqueue commands
+│   ├── useTransmission.ts         # RTDB command dispatch
 │   └── index.ts
 ├── repositories/
-│   ├── IQueueRepository.ts        # Interface
-│   ├── FirestoreQueueRepository.ts
-│   ├── InMemoryQueueRepository.ts
 │   └── index.ts
 ├── types/
-│   └── index.ts                   # QueueItem, TransmissionStatus types
+│   └── index.ts
 └── __tests__/
     ├── RemoteButton.test.tsx
-    ├── useQueue.test.ts
     └── useTransmission.test.ts
 ```
 
@@ -427,7 +421,7 @@ import { LearningModal, CommandList } from '@/features/learning/components'
 2. **Use barrel exports** - Export public API via `index.ts` files
 3. **Co-locate tests** - Tests live with the code they test
 4. **Shared code in core/** - Only truly reusable code goes in core
-5. **Repository per domain** - Commands, Devices, Queue, Layout repositories
+5. **Repository per domain** - Commands, Devices, Layout repositories
 6. **One component per file** - Easier to navigate and maintain
 7. **Types at feature level** - Each feature defines its own types
 8. **Mock implementations** - Always provide in-memory versions for testing

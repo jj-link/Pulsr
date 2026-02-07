@@ -85,20 +85,6 @@
   max-width: 100%;
 }
 
-.remote-queue-status {
-  margin-bottom: 1rem;
-  padding: 0.75rem;
-  background-color: #1a1a1a;
-  border-radius: 8px;
-}
-
-.remote-queue-status h4 {
-  margin: 0 0 0.5rem;
-  font-size: 0.85rem;
-  color: #888;
-  font-weight: 500;
-}
-
 .test-panel {
   border: 1px solid #333;
   border-radius: 8px;
@@ -197,58 +183,6 @@
   opacity: 0.7;
 }
 
-.test-queue-status {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #333;
-}
-
-.test-queue-status h4 {
-  margin: 0 0 0.5rem;
-  font-size: 0.85rem;
-  color: #888;
-  font-weight: 500;
-}
-
-.test-queue-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.3rem 0;
-  font-size: 0.85rem;
-}
-
-.test-queue-command {
-  color: #aaa;
-}
-
-.test-queue-badge {
-  padding: 0.1rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.test-queue-badge.pending {
-  background-color: rgba(255, 193, 7, 0.15);
-  color: #ffc107;
-}
-
-.test-queue-badge.processing {
-  background-color: rgba(33, 150, 243, 0.15);
-  color: #2196f3;
-}
-
-.test-queue-badge.completed {
-  background-color: rgba(76, 175, 80, 0.15);
-  color: #4caf50;
-}
-
-.test-queue-badge.failed {
-  background-color: rgba(244, 67, 54, 0.15);
-  color: #f44336;
-}
-
 @media (prefers-color-scheme: light) {
   .remote-empty-state {
     border-color: #ddd;
@@ -264,10 +198,6 @@
 
   .remote-btn:hover {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.18);
-  }
-
-  .remote-queue-status {
-    background-color: #f5f5f5;
   }
 
   .test-panel {
@@ -296,11 +226,4 @@
     background-color: #e8e8e8;
   }
 
-  .test-queue-status {
-    border-top-color: #e0e0e0;
-  }
-
-  .test-queue-command {
-    color: #666;
-  }
 }

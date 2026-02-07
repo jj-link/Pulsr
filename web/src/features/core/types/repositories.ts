@@ -1,4 +1,4 @@
-import { IRCommand, Device, QueueItem, DeviceLayout, ChatSession, KnowledgeArticle } from './index'
+import { IRCommand, Device, DeviceLayout, ChatSession, KnowledgeArticle } from './index'
 
 export interface ICommandRepository {
   getByDevice(deviceId: string): Promise<IRCommand[]>
@@ -18,13 +18,6 @@ export interface IDeviceRepository {
   setLearningMode(deviceId: string, isLearning: boolean): Promise<void>
   clearPendingSignal(deviceId: string): Promise<void>
   subscribe(callback: (devices: Device[]) => void): () => void
-}
-
-export interface IQueueRepository {
-  getByDevice(deviceId: string): Promise<QueueItem[]>
-  enqueue(deviceId: string, commandId: string): Promise<QueueItem>
-  updateStatus(id: string, status: QueueItem['status'], error?: string): Promise<void>
-  subscribe(deviceId: string, callback: (queue: QueueItem[]) => void): () => void
 }
 
 export interface ILayoutRepository {

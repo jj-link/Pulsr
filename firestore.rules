@@ -23,12 +23,6 @@ service cloud.firestore {
         // TEMPORARY: Allow all access for development
         allow read, write: if true;
       }
-      
-      // Queue subcollection
-      match /queue/{queueId} {
-        // TEMPORARY: Allow all access for development
-        allow read, write: if true;
-      }
     }
     
     // Knowledge base (for chatbot)

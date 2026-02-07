@@ -40,16 +40,6 @@ export interface LayoutButton {
   position: { row: number; col: number }
 }
 
-export interface QueueItem {
-  id: string
-  deviceId: string
-  commandId: string
-  status: 'pending' | 'processing' | 'completed' | 'failed'
-  createdAt: Date
-  processedAt?: Date
-  error?: string
-}
-
 export interface KnowledgeArticle {
   id: string
   title: string

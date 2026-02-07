@@ -177,7 +177,7 @@ TDD is applied **selectively** based on testability:
 | Track | TDD Applicability | Rationale |
 |-------|-------------------|-----------|
 | **Decoder** | Very High | Protocol decoders have deterministic I/O—ideal for test-first design |
-| **Transmission** | High | Queue logic, FIFO ordering, and retry behavior are pure functions |
+| **Transmission** | High | Protocol encoding and dispatch logic are pure functions |
 | **Chatbot** | High | Prompt construction and session management are testable without API calls |
 | **Designer** | Low-Medium | Data layer (validation, persistence) suits TDD; UI interactions require manual/E2E testing |
 
@@ -205,7 +205,7 @@ esp32/
 ├── src/
 │   ├── main.cpp            # Production firmware
 │   ├── receiver/            # Learning mode implementations
-│   ├── transmitter/       # Queue processing implementations
+│   │   ├── transmitter/       # IR transmission implementations
 │   ├── utils/              # Utilities (LED, WiFi, etc.)
 │   └── hardware_tests/     # Standalone test scripts
 ├── include/

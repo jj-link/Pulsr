@@ -67,7 +67,7 @@ Adafruit_NeoPixel statusLED(NEOPIXEL_COUNT, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 #define COLOR_SUCCESS       statusLED.Color(0, 100, 0)   // Green = success
 #define COLOR_ERROR         statusLED.Color(100, 0, 0)   // Red = error
 #define COLOR_TIMEOUT       statusLED.Color(100, 50, 0)  // Orange = timeout
-#define COLOR_TX_PROCESSING statusLED.Color(80, 0, 80)   // Purple = processing queue item
+#define COLOR_TX_PROCESSING statusLED.Color(80, 0, 80)   // Purple = processing command
 #define COLOR_TX_SUCCESS    statusLED.Color(0, 100, 50)   // Cyan-green = transmit success
 #define COLOR_TX_FAILED     statusLED.Color(100, 20, 0)   // Red-orange = transmit failed
 

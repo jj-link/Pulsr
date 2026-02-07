@@ -23,14 +23,14 @@ The Remote page depends on the Designer to define button layouts. Since the Desi
 
 ### Phase 1: Empty State + Test Transmit Panel (Current)
 - **Default behavior:** Remote page shows an empty state: *"No buttons configured. Go to Designer to set up your remote."*
-- **Test panel:** A collapsible "Test Transmit" debug panel lists all learned commands for the selected device, each with a "Send" button. This allows testing the full queue → ESP32 → IR LED pipeline without a layout.
+- **Test panel:** A collapsible "Test Transmit" debug panel lists all learned commands for the selected device, each with a "Send" button. This allows testing the full RTDB → ESP32 → IR LED pipeline without a layout.
 - **Purpose:** Validate end-to-end transmission before investing in drag-and-drop Designer.
 - **Lifecycle:** The test panel is temporary — it will be removed or hidden behind a dev flag once the Designer is complete.
 
 ### Phase 2: Layout-Driven Remote (After Designer)
 - Remote page reads the device's `layout` from Firestore (created via Designer's click-to-place grid)
 - Renders buttons in a CSS grid matching the layout's `gridSize` (default: 3 cols × 4 rows)
-- Each button shows its label, color, and enqueues the assigned command on click
+- Each button shows its label, color, and dispatches the assigned command via RTDB on click
 - The empty state only shows when no layout has been created yet
 - Test panel is removed or hidden behind a dev flag
 
@@ -68,13 +68,12 @@ Display transmission feedback.
 ## Testing Strategy
 
 ### Unit Tests (TDD)
-- Button click enqueues command
-- Status updates correctly
+- Button click dispatches command to RTDB
 - Error handling logic
 
 ### Integration Tests
-- Mock Firestore queue writes
-- Test status listener updates
+- Mock RTDB writes
+- Test dispatch flow
 
 ### E2E Tests (Playwright)
 - User can press button
@@ -145,7 +144,7 @@ function useTransmission(deviceId: string) {
 
 ### Mock-First Development
 
-Build with `InMemoryQueueRepository` before ESP32 ready:
+Build with `InMemoryCommandDispatch` before ESP32 ready:
 
 ```typescript
 class InMemoryCommandDispatch implements ICommandDispatch {
