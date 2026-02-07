@@ -6,8 +6,8 @@
 
 The system revolves around **Firebase** as the central message bus. The Web App and ESP32 never communicate directly; they synchronize state through two Firebase services:
 
-- **Firestore** — structured data storage (commands, layouts, device metadata, queue items)
-- **Realtime Database (RTDB)** — lightweight push notifications to the ESP32 via persistent streaming
+- **Firestore** — structured data storage (commands, layouts, device metadata)
+- **Realtime Database (RTDB)** — real-time push channel to the ESP32 via persistent streaming (learning mode, command dispatch)
 
 **Important:** The ESP32 device does **NOT** serve the web application. The React web app is hosted on **Firebase Hosting** as static files. The ESP32's sole responsibility is IR signal processing (receiving and transmitting). All web UI ↔ ESP32 communication happens asynchronously through Firebase.
 
@@ -20,7 +20,7 @@ graph TD
     end
 
     subgraph Feature3_Remote [Feature 3: Remote]
-        QueueService[Queue Service]
+        UI_Remote_Send[Remote Send]
         ESP_Tx[ESP32 Transmitter]
     end
 
@@ -39,7 +39,6 @@ graph TD
         subgraph Firestore
             Devices[Devices Collection]
             Commands[Commands Sub-Collection]
-            Queue[Queue Sub-Collection]
             KB[Knowledge Base]
         end
         RTDB[Realtime Database]
@@ -47,17 +46,14 @@ graph TD
 
     %% Connections — Web writes
     UI_Designer -->|Reads Layout| Devices
-    UI_Remote -->|Writes Command Request| QueueService
-    QueueService -->|Adds to Queue| Queue
-    QueueService -->|Notifies via| RTDB
+    UI_Remote_Send -->|Writes pendingCommand| RTDB
 
     UI_Learn -->|Sets Learning Mode| Devices
     UI_Learn -->|Notifies via| RTDB
 
     %% Connections — ESP32 streaming + reads
-    RTDB -->|Streams isLearning + queueNotify| ESP_Rx
-    RTDB -->|Streams isLearning + queueNotify| ESP_Tx
-    ESP_Tx -->|Reads Queue from| Queue
+    RTDB -->|Streams isLearning + pendingCommand| ESP_Rx
+    RTDB -->|Streams isLearning + pendingCommand| ESP_Tx
     ESP_Tx -->|Emits IR| IR_LED((IR LED))
 
     IR_Sensor((IR Sensor)) -->|Raw Signal| ESP_Rx
@@ -87,7 +83,7 @@ graph TD
 | :--- | :--- | :--- |
 | **User Creates Remote** | Designer | UI creates layout → saves to Firestore |
 | **User Teaches Command** | Learning | UI sets `isLearning` in Firestore + RTDB → RTDB pushes to ESP32 → ESP32 captures IR → saves command to Firestore |
-| **User Presses Button** | Remote | UI adds queue item to Firestore + bumps `queueNotify` in RTDB → RTDB pushes to ESP32 → ESP32 reads queue from Firestore → emits IR |
+| **User Presses Button** | Remote | UI writes `pendingCommand` to RTDB → RTDB pushes to ESP32 instantly → ESP32 transmits IR → clears command |
 | **User Asks Help** | Chatbot | UI calls Cloud Function → AI answers |
 
 ## ESP32 ↔ Firebase Communication Strategy
@@ -104,20 +100,20 @@ The ESP32 uses a **hybrid Firestore + RTDB** architecture. RTDB provides instant
 The ESP32 opens a single persistent SSE connection to RTDB path `/devices/{deviceId}`. This stream delivers two signals:
 
 - **`isLearning`** (boolean) — set by the web UI when the user enters learning mode
-- **`queueNotify`** (timestamp) — bumped by the web UI when a new command is enqueued
+- **`pendingCommand`** (object) — written by the web UI with full command details when a button is pressed
 
 When the stream fires, the ESP32 main loop processes the event:
 - `isLearning` change → starts or stops the `LearningStateMachine`
-- `queueNotify` change → triggers `QueueProcessor` to read pending items from Firestore once
+- `pendingCommand` change → ESP32 encodes and transmits IR immediately, then clears the field
 
 ### Why two databases?
 
 | Database | Role | What's stored |
 |----------|------|---------------|
-| **RTDB** | Real-time push channel | `isLearning`, `queueNotify` (tiny flags per device) |
-| **Firestore** | Structured data store | Commands, layouts, queue items, device metadata |
+| **RTDB** | Real-time push channel | `isLearning` (boolean), `pendingCommand` (command object) |
+| **Firestore** | Structured data store | Commands, layouts, device metadata |
 
-The web app writes to **both** on every user action that the ESP32 needs to react to. Firestore remains the source of truth; RTDB is a lightweight notification bell.
+The web app writes to RTDB for anything the ESP32 needs to react to instantly. Firestore stores persistent data (learned commands, layouts). No Firestore polling from the ESP32 — all real-time communication uses RTDB streaming.
 
 ## Navigation Structure
 
@@ -166,7 +162,7 @@ All major subsystems communicate through well-defined interfaces rather than con
 | Interface | Purpose | Implementations |
 |-----------|---------|-----------------|
 | `ICommandRepository` | Command storage | `FirestoreCommandRepository`, `InMemoryCommandRepository` |
-| `ICommandQueue` | Transmission queue | `FirestoreQueue`, `InMemoryQueue` |
+| `ICommandDispatch` | IR command dispatch | `RTDBCommandDispatch`, `InMemoryCommandDispatch` |
 | `IProtocolDecoder` | IR signal decoding | `NECDecoder`, `SonyDecoder`, `SamsungDecoder` |
 | `IProtocolEncoder` | IR signal encoding | `NECEncoder`, `SonyEncoder`, `SamsungEncoder` |
 | `ISignalCapture` | Hardware IR input | `ESP32SignalCapture`, `MockSignalCapture` |

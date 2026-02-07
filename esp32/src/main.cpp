@@ -3,9 +3,9 @@
  * 
  * This embedded software implements a cloud-connected IR controller with:
  * - IR signal learning and decoding (receiver)
- * - IR signal transmission from Firestore queue (transmitter)
- * - Firestore integration for command storage and queue processing
- * - Real-time learning mode control from web UI
+ * - IR signal transmission via RTDB pendingCommand (transmitter)
+ * - Firestore integration for command storage
+ * - Real-time control from web UI via RTDB streaming
  * 
  * Architecture:
  * - Uses interface abstractions for testability
@@ -25,7 +25,6 @@
 // Transmitter components
 #include "transmitter/ESP32IRTransmitter.h"
 #include "transmitter/IRLibProtocolEncoders.h"
-#include "transmitter/QueueProcessor.h"
 
 // Firebase integration
 #include "utils/FirebaseManager.h"
@@ -44,7 +43,6 @@ LearningStateMachine learningStateMachine(&signalCapture, &protocolDecoder, LEAR
 // Transmitter subsystem
 ESP32IRTransmitter irTransmitter(IR_SEND_PIN, false);  // GPIO 4, not inverted
 IRLibProtocolEncoders protocolEncoder;
-FirebaseData queueFbdo;  // Separate FirebaseData instance for queue polling
 
 // Firebase integration
 FirebaseManager firebaseManager(
@@ -57,9 +55,6 @@ FirebaseManager firebaseManager(
     FIREBASE_USER_PASSWORD,
     DEVICE_ID
 );
-
-// Queue processor (initialized in setup after Firebase is ready)
-QueueProcessor* queueProcessor = nullptr;
 
 // Status LED
 Adafruit_NeoPixel statusLED(NEOPIXEL_COUNT, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
@@ -138,35 +133,49 @@ void onSignalCaptured(const DecodedSignal& signal) {
 // Track when to revert LED back to ready after transmit flash
 unsigned long txLedRevertTime = 0;
 
-void onTransmissionEvent(TransmissionStatus status, const String& protocol, const String& commandId) {
-    switch (status) {
-        case TransmissionStatus::PROCESSING:
-            Serial.print("[TX] Processing command: ");
-            Serial.println(commandId);
-            statusLED.setPixelColor(0, COLOR_TX_PROCESSING);
-            statusLED.show();
-            break;
-            
-        case TransmissionStatus::COMPLETED:
-            Serial.print("[TX] Transmitted OK: ");
-            Serial.print(protocol);
-            Serial.print(" cmd=");
-            Serial.println(commandId);
-            statusLED.setPixelColor(0, COLOR_TX_SUCCESS);
-            statusLED.show();
-            txLedRevertTime = millis() + 500;  // Flash for 500ms
-            break;
-            
-        case TransmissionStatus::FAILED:
-            Serial.print("[TX] Failed: ");
-            Serial.println(commandId);
-            statusLED.setPixelColor(0, COLOR_TX_FAILED);
-            statusLED.show();
-            txLedRevertTime = millis() + 1000;  // Flash for 1s
-            break;
-            
-        default:
-            break;
+void onCommandReceived(const PendingCommand& cmd) {
+    statusLED.setPixelColor(0, COLOR_TX_PROCESSING);
+    statusLED.show();
+    
+    // Encode the command
+    EncodedSignal encoded = protocolEncoder.encode(
+        cmd.protocol.c_str(), cmd.address, cmd.command, cmd.bits
+    );
+    
+    if (!encoded.isKnownProtocol) {
+        Serial.print("[TX] Unknown protocol: ");
+        Serial.println(cmd.protocol);
+        statusLED.setPixelColor(0, COLOR_TX_FAILED);
+        statusLED.show();
+        txLedRevertTime = millis() + 1000;
+        return;
+    }
+    
+    // Transmit the encoded signal
+    TransmitResult result = irTransmitter.transmit(
+        encoded.rawData, encoded.rawLength, encoded.frequency
+    );
+    
+    // Clean up allocated memory
+    if (encoded.rawData) {
+        delete[] encoded.rawData;
+    }
+    
+    if (result.success) {
+        Serial.print("[TX] Transmitted OK: ");
+        Serial.print(cmd.protocol);
+        Serial.print(" addr=0x");
+        Serial.print(cmd.address, HEX);
+        Serial.print(" cmd=0x");
+        Serial.println(cmd.command, HEX);
+        statusLED.setPixelColor(0, COLOR_TX_SUCCESS);
+        statusLED.show();
+        txLedRevertTime = millis() + 500;
+    } else {
+        Serial.println("[TX] Transmit failed!");
+        statusLED.setPixelColor(0, COLOR_TX_FAILED);
+        statusLED.show();
+        txLedRevertTime = millis() + 1000;
     }
 }
 
@@ -209,28 +218,12 @@ void setup() {
     learningStateMachine.onStateChange(onLearningStateChanged);
     learningStateMachine.onSignalCapture(onSignalCaptured);
     firebaseManager.onLearningStateChange(onFirebaseLearningModeChanged);
-    firebaseManager.onQueueNotify([]() {
-        if (queueProcessor != nullptr) {
-            queueProcessor->processNow();
-        }
-    });
+    firebaseManager.onCommandReceived(onCommandReceived);
     
     // Connect to Firebase
     Serial.println("[Pulsr] Connecting to Firebase...");
     if (firebaseManager.begin()) {
         Serial.println("[Pulsr] Firebase connection initiated");
-        
-        // Initialize queue processor (RTDB stream triggers immediate polls;
-        // fallback polling every 30s as safety net)
-        queueProcessor = new QueueProcessor(
-            &queueFbdo,
-            FIREBASE_PROJECT_ID,
-            DEVICE_ID,
-            &protocolEncoder,
-            &irTransmitter
-        );
-        queueProcessor->onTransmissionEvent(onTransmissionEvent);
-        Serial.println("[Pulsr] Queue processor initialized");
     } else {
         Serial.println("[Pulsr] Firebase connection failed - will retry");
         statusLED.setPixelColor(0, COLOR_ERROR);
@@ -248,12 +241,6 @@ void loop() {
     
     // Update learning state machine (handles timeouts and signal capture)
     learningStateMachine.update();
-    
-    // Update queue processor (event-driven via RTDB, fallback poll every 30s)
-    // Only require WiFi connected — QueueProcessor has its own error handling with backoff
-    if (queueProcessor != nullptr && WiFi.status() == WL_CONNECTED) {
-        queueProcessor->update();
-    }
     
     // Revert transmit LED flash back to ready color after timeout
     if (txLedRevertTime > 0 && millis() >= txLedRevertTime) {

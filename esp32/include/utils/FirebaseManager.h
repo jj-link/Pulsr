@@ -19,8 +19,16 @@ enum class FirebaseState {
 // Callback for isLearning state changes
 using LearningStateCallback = std::function<void(bool isLearning)>;
 
-// Callback for queue notification (new item enqueued)
-using QueueNotifyCallback = std::function<void()>;
+// Command received via RTDB pendingCommand
+struct PendingCommand {
+    String protocol;
+    uint32_t address;
+    uint32_t command;
+    uint16_t bits;
+};
+
+// Callback for command dispatch (replaces queue polling)
+using CommandCallback = std::function<void(const PendingCommand& cmd)>;
 
 class FirebaseManager {
 public:
@@ -52,8 +60,8 @@ public:
     void onLearningStateChange(LearningStateCallback callback) { 
         learningStateCallback = callback; 
     }
-    void onQueueNotify(QueueNotifyCallback callback) {
-        queueNotifyCallback = callback;
+    void onCommandReceived(CommandCallback callback) {
+        commandCallback = callback;
     }
 
 private:
@@ -81,13 +89,13 @@ private:
     // Thread-safe flags set by RTDB stream callback, consumed by update()
     volatile bool pendingLearningChange;
     volatile bool pendingLearningState;
-    volatile bool pendingQueueNotify;
+    volatile bool pendingCommandReceived;
     bool lastLearningState;
-    String lastQueueNotifyValue;
+    PendingCommand pendingCmd;
     
     // Callbacks
     LearningStateCallback learningStateCallback;
-    QueueNotifyCallback queueNotifyCallback;
+    CommandCallback commandCallback;
     
     // Stream callbacks (static so they can be passed to library)
     static FirebaseManager* instance;  // Singleton ref for static callbacks

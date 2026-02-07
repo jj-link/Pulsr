@@ -25,10 +25,10 @@ FirebaseManager::FirebaseManager(
     streamStarted(false),
     pendingLearningChange(false),
     pendingLearningState(false),
-    pendingQueueNotify(false),
+    pendingCommandReceived(false),
     lastLearningState(false),
     learningStateCallback(nullptr),
-    queueNotifyCallback(nullptr)
+    commandCallback(nullptr)
 {
     instance = this;
 }
@@ -109,13 +109,23 @@ void FirebaseManager::update() {
         }
     }
     
-    if (pendingQueueNotify) {
-        pendingQueueNotify = false;
-        Serial.println("[RTDB] Queue notification received");
+    if (pendingCommandReceived) {
+        pendingCommandReceived = false;
         
-        if (queueNotifyCallback) {
-            queueNotifyCallback();
+        Serial.print("[RTDB] Command received: ");
+        Serial.print(pendingCmd.protocol);
+        Serial.print(" addr=0x");
+        Serial.print(pendingCmd.address, HEX);
+        Serial.print(" cmd=0x");
+        Serial.println(pendingCmd.command, HEX);
+        
+        if (commandCallback) {
+            commandCallback(pendingCmd);
         }
+        
+        // Clear pendingCommand from RTDB so it doesn't re-trigger on reconnect
+        String cmdPath = getRtdbDevicePath() + "/pendingCommand";
+        Firebase.RTDB.deleteNode(&fbdo, cmdPath.c_str());
     }
 }
 
@@ -149,10 +159,19 @@ void FirebaseManager::onStreamData(FirebaseStream data) {
     if (path == "/isLearning" || path == "isLearning") {
         instance->pendingLearningState = data.boolData();
         instance->pendingLearningChange = true;
-    } else if (path == "/queueNotify" || path == "queueNotify") {
-        // Individual field update — RTDB only fires this when the value
-        // actually changed in the database, so always process it
-        instance->pendingQueueNotify = true;
+    } else if (path == "/pendingCommand") {
+        // Command dispatch — parse the command object
+        if (data.dataType() == "json") {
+            FirebaseJson json = data.jsonObject();
+            FirebaseJsonData result;
+            
+            if (json.get(result, "protocol")) instance->pendingCmd.protocol = result.stringValue;
+            if (json.get(result, "address")) instance->pendingCmd.address = result.intValue;
+            if (json.get(result, "command")) instance->pendingCmd.command = result.intValue;
+            if (json.get(result, "bits")) instance->pendingCmd.bits = result.intValue;
+            
+            instance->pendingCommandReceived = true;
+        }
     } else if (path == "/") {
         // Initial stream event sends the entire node — parse children
         FirebaseJson json = data.jsonObject();
@@ -162,10 +181,18 @@ void FirebaseManager::onStreamData(FirebaseStream data) {
             instance->pendingLearningState = result.boolValue;
             instance->pendingLearningChange = true;
         }
-        // Store initial queueNotify value but DON'T trigger a poll —
-        // we only care about future changes, not the current value
-        if (json.get(result, "queueNotify")) {
-            instance->lastQueueNotifyValue = result.stringValue;
+        // Parse pendingCommand from initial load if present
+        // (will be cleared after processing, so usually absent)
+        FirebaseJsonData cmdData;
+        if (json.get(cmdData, "pendingCommand") && cmdData.type == "object") {
+            FirebaseJson cmdJson;
+            cmdJson.setJsonData(cmdData.stringValue);
+            FirebaseJsonData r;
+            if (cmdJson.get(r, "protocol")) instance->pendingCmd.protocol = r.stringValue;
+            if (cmdJson.get(r, "address")) instance->pendingCmd.address = r.intValue;
+            if (cmdJson.get(r, "command")) instance->pendingCmd.command = r.intValue;
+            if (cmdJson.get(r, "bits")) instance->pendingCmd.bits = r.intValue;
+            instance->pendingCommandReceived = true;
         }
     }
 }

@@ -10,8 +10,7 @@ include/transmitter/
 
 src/transmitter/
 ├── ESP32IRTransmitter.cpp   # IRsend wrapper
-├── ProtocolEncoders.cpp     # Encode protocols to IR timing
-└── QueueProcessor.cpp       # Poll Firestore queue and transmit
+└── ProtocolEncoders.cpp     # Encode protocols to IR timing
 ```
 
 ## Components
@@ -39,19 +38,21 @@ Mirror of decoder functionality - converts command data to IR timing.
 - Generate correct carrier frequency pulses
 - Validate encoding matches decoder output (symmetry tests)
 
-### QueueProcessor
-Main transmission loop.
+### Command Dispatch (via RTDB stream)
+The ESP32 receives commands directly via the RTDB stream on `/devices/{deviceId}/pendingCommand`.
 
-**Responsibilities:**
-- Stream Firestore `queue/` collection for new items (replaces polling)
-- Process PENDING items in FIFO order
-- Load command details via `commandId` reference
-- Encode command using appropriate protocol encoder
-- Transmit via `ESP32IRTransmitter`
-- Update status to SENT or FAILED
-- Set `processedAt` timestamp
-- Handle retry logic for failures
-- Exponential backoff on connection errors (cap 60s, SSL reset after 5 failures)
+**Flow:**
+1. Web UI writes `pendingCommand` object to RTDB: `{protocol, address, command, bits, timestamp}`
+2. RTDB stream callback fires in `FirebaseManager`
+3. `FirebaseManager` extracts command fields and invokes the transmit callback
+4. `main.cpp` encodes and transmits IR via `ProtocolEncoders` + `ESP32IRTransmitter`
+5. ESP32 clears `pendingCommand` from RTDB after transmission
+
+**Advantages over previous Firestore queue approach:**
+- ~100ms latency (same as `isLearning` toggle) vs up to 5-30s with polling
+- No Firestore reads from ESP32 for command dispatch
+- No queue document accumulation or page size issues
+- Dramatically simpler code path
 
 ## Testing Strategy
 
@@ -75,12 +76,12 @@ Validation: Point at TV and verify it responds to transmitted signals.
 ## Dependencies
 
 - `IRremoteESP8266` - IR signal transmission
-- `Firebase-ESP-Client` - Firestore queue polling
+- `Firebase-ESP-Client` - RTDB streaming
 
 ## Performance Targets
 
-- **Latency:** <500ms from queue enqueue to IR emission (streaming enables near-instant)
-- **Communication:** Firestore real-time streaming (SSE) — no polling overhead
+- **Latency:** ~100ms from button press to IR emission (RTDB streaming)
+- **Communication:** RTDB real-time streaming (SSE) — no polling, no Firestore reads
 - **Range:** Sufficient for across-room control
 
 ## NeoPixel LED Feedback
@@ -94,18 +95,16 @@ The built-in NeoPixel RGB LED provides visual feedback during transmission:
 | Red-orange | Transmit failed (flashes 1s) |
 | Dim green | Returns to ready state after flash |
 
-Feedback is delivered via `TransmissionEventCallback` from `QueueProcessor` to `main.cpp`.
+Feedback is delivered via callback from `FirebaseManager` command handler to `main.cpp`.
 
 ## Current Status
 
-- **QueueProcessor:** Event-driven via RTDB `queueNotify` stream + 30s fallback poll
-- **RTDB streaming:** ESP32 streams `/devices/{deviceId}` for `isLearning` and `queueNotify` signals
-- **Web writes:** Enqueue writes Firestore queue item + bumps RTDB `queueNotify` timestamp
-- **Status alignment:** Uses lowercase status values (`pending`, `processing`, `completed`, `failed`) matching web app
-- **Timestamps:** ISO 8601 format for Firestore REST API compatibility
-- **Command loading:** Handles both `stringValue` and `integerValue` for address/command fields
-- **NeoPixel feedback:** Wired via callback from QueueProcessor to main.cpp LED handler
-- **Error recovery:** Exponential backoff (cap 60s) + SSL reset after 5 consecutive failures
+- **Command dispatch:** Migrating from Firestore queue polling to direct RTDB `pendingCommand` streaming
+- **RTDB streaming:** ESP32 streams `/devices/{deviceId}` for `isLearning` (working) and `pendingCommand` (in progress)
+- **Web writes:** Button press writes `pendingCommand` object directly to RTDB (in progress)
+- **NeoPixel feedback:** Wired via callback to main.cpp LED handler
+- **Protocol encoding:** NEC, Samsung, Sony, RAW all working
+- **`isLearning` pattern:** Proven ~100ms latency via RTDB streaming — `pendingCommand` replicates this pattern
 
 ## Integration
 

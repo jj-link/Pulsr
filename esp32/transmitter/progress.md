@@ -1,7 +1,7 @@
 # Transmitter - ESP32 Status
 
 **Last Updated:** 2026-02-07  
-**Phase:** Streaming Migration
+**Phase:** RTDB Direct Command Dispatch
 
 ## Progress
 
@@ -26,31 +26,34 @@
   - [x] Carrier frequency configuration (38kHz)
   - [x] Production build verified (17.1% Flash, 14.8% RAM)
   - [ ] Hardware tested via `ir_transmitter_test`
-- [x] **QueueProcessor**
-  - [x] Firestore polling logic (legacy, being replaced by streaming)
-  - [x] FIFO queue ordering
-  - [x] Status updates (PENDING → PROCESSING → SENT/FAILED)
-  - [x] Command loading from Firestore
+- [x] **QueueProcessor** (legacy — being replaced by RTDB direct dispatch)
+  - [x] Firestore polling logic (legacy)
+  - [x] FIFO queue ordering (legacy)
+  - [x] Status updates (legacy)
+  - [x] Command loading from Firestore (legacy)
   - [x] Encoding and transmission integration
-  - [x] Production build verified (17.1% Flash, 14.8% RAM)
-  - [x] Exponential backoff on errors (cap 60s, SSL reset after 5 failures)
-  - [ ] Migrate to Firestore real-time streaming (replace polling)
+  - [x] Exponential backoff on errors (legacy)
+- [ ] **RTDB Command Dispatch** (replacing QueueProcessor)
+  - [ ] Handle `pendingCommand` in RTDB stream callback
+  - [ ] Extract protocol/address/command/bits from stream data
+  - [ ] Encode and transmit IR via existing ProtocolEncoders + ESP32IRTransmitter
+  - [ ] Clear `pendingCommand` from RTDB after transmission
+  - [ ] Remove QueueProcessor and Firestore queue dependencies
 
 ### Firebase Integration
-- [x] Queue collection polling (legacy, being replaced by streaming)
-- [x] Command reference loading via commandId
-- [x] Status update writes with timestamps
-- [ ] Migrate to Firestore real-time streaming for queue
-- [ ] Latency optimization testing (<500ms target)
+- [x] RTDB streaming for `isLearning` (working, ~100ms latency)
+- [ ] RTDB streaming for `pendingCommand` (in progress)
+- [ ] Remove Firestore queue reads/writes from ESP32
+- [ ] Latency optimization testing (~100ms target)
 
 ## Blockers
 
-None - core transmitter implementation complete.
+None.
 
 ## Next Steps
 
-1. **Replace polling with Firestore streaming** for queue collection
-   - Eliminates ~43,200 reads/day per device from 2s polling
-   - Enables near-instant transmission (currently up to 2s delay)
-2. Create `ir_transmitter_test` hardware validation script
-3. Latency optimization testing (<500ms target)
+1. **Implement RTDB `pendingCommand` dispatch** — replicate `isLearning` pattern for commands
+2. **Remove QueueProcessor** and all Firestore queue polling code
+3. **Update web remote** to write `pendingCommand` to RTDB instead of Firestore queue
+4. Create `ir_transmitter_test` hardware validation script
+5. Latency optimization testing (~100ms target)

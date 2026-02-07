@@ -46,9 +46,8 @@ Individual button component for IR commands.
 - `label`: Button text
 
 **Responsibilities:**
-- Enqueue command to Firestore on click
+- Write `pendingCommand` to RTDB on click (protocol, address, command, bits)
 - Show optimistic "pressed" state
-- Display status (pending/sent/failed)
 - Handle errors with retry option
 
 ### RemoteGrid
@@ -59,13 +58,12 @@ Layout container for buttons.
 - Responsive grid (mobile/desktop)
 - Edit mode toggle
 
-### QueueMonitor
-Display transmission queue status.
+### TransmitStatus
+Display transmission feedback.
 
 **Responsibilities:**
-- Show pending command count
-- Display recent transmissions
-- Error notifications
+- Show "sending" flash on button press
+- Error notifications on RTDB write failure
 
 ## Testing Strategy
 
@@ -102,13 +100,13 @@ Display transmission queue status.
 All Firestore interactions use repository interfaces:
 
 ```typescript
-interface IQueueRepository {
-  enqueueCommand(deviceId: string, commandId: string): Promise<string>
-  listenToQueueItem(
-    queueItemId: string,
-    callback: (status: QueueStatus) => void
-  ): () => void
-  getRecentTransmissions(deviceId: string, limit: number): Promise<QueueItem[]>
+interface ICommandDispatch {
+  sendCommand(deviceId: string, command: {
+    protocol: string
+    address: number
+    command: number
+    bits: number
+  }): Promise<void>
 }
 
 interface ILayoutRepository {
@@ -124,22 +122,24 @@ Components use hooks that wrap repositories:
 ```typescript
 // useTransmission.ts
 function useTransmission(deviceId: string) {
-  const queueRepo = useQueueRepository()
-  const [status, setStatus] = useState<Record<string, QueueStatus>>({})
+  const dispatch = useCommandDispatch()
+  const [sending, setSending] = useState<string | null>(null)
   
-  const pressButton = useCallback(async (commandId: string) => {
-    const queueItemId = await queueRepo.enqueueCommand(deviceId, commandId)
-    
-    // Optimistic update
-    setStatus(prev => ({ ...prev, [commandId]: 'pending' }))
-    
-    // Listen for status updates
-    return queueRepo.listenToQueueItem(queueItemId, (newStatus) => {
-      setStatus(prev => ({ ...prev, [commandId]: newStatus }))
-    })
-  }, [deviceId, queueRepo])
+  const pressButton = useCallback(async (command: CommandDetails) => {
+    setSending(command.id)
+    try {
+      await dispatch.sendCommand(deviceId, {
+        protocol: command.protocol,
+        address: command.address,
+        command: command.command,
+        bits: command.bits,
+      })
+    } finally {
+      setTimeout(() => setSending(null), 300)
+    }
+  }, [deviceId, dispatch])
   
-  return { pressButton, status }
+  return { pressButton, sending }
 }
 ```
 
@@ -148,44 +148,42 @@ function useTransmission(deviceId: string) {
 Build with `InMemoryQueueRepository` before ESP32 ready:
 
 ```typescript
-class InMemoryQueueRepository implements IQueueRepository {
-  private queue = new Map<string, QueueItem>()
-  
-  async enqueueCommand(deviceId: string, commandId: string) {
-    const id = crypto.randomUUID()
-    this.queue.set(id, {
-      id,
-      deviceId,
-      commandId,
-      status: 'pending',
-      createdAt: new Date()
-    })
-    
-    // Simulate ESP32 processing
-    setTimeout(() => {
-      const item = this.queue.get(id)!
-      item.status = 'sent'
-      this.queue.set(id, item)
-    }, 1000)
-    
-    return id
+class InMemoryCommandDispatch implements ICommandDispatch {
+  async sendCommand(deviceId: string, command: CommandDetails) {
+    console.log(`[Mock] Sending ${command.protocol} to ${deviceId}`)
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 100))
   }
 }
 ```
 
-## Firestore Schema
+## Data Schema
 
+### Firestore (persistent storage)
 ```
 devices/{deviceId}
   - name: string
   - layout: object (button positions, icons, colors)
   
-  queue/{queueItemId}
-    - commandId: string
-    - status: 'pending' | 'sent' | 'failed'
-    - createdAt: timestamp
-    - processedAt: timestamp (optional)
-    - error: string (optional)
+  commands/{commandId}
+    - protocol: string
+    - address: number
+    - command: number
+    - bits: number
+    - label: string
+```
+
+### RTDB (real-time dispatch)
+```
+devices/{deviceId}
+  - isLearning: boolean
+  - pendingCommand: {
+      protocol: string
+      address: number
+      command: number
+      bits: number
+      timestamp: number
+    }
 ```
 
 ## File Structure
@@ -195,19 +193,17 @@ features/remote/
 ├── components/
 │   ├── RemoteButton.tsx
 │   ├── RemoteGrid.tsx
-│   ├── QueueMonitor.tsx
 │   └── index.ts
 ├── hooks/
 │   ├── useTransmission.ts
-│   ├── useQueue.ts
 │   ├── useLayout.ts
 │   └── index.ts
 ├── repositories/
-│   ├── IQueueRepository.ts
+│   ├── ICommandDispatch.ts
 │   ├── ILayoutRepository.ts
-│   ├── FirestoreQueueRepository.ts
+│   ├── RTDBCommandDispatch.ts
 │   ├── FirestoreLayoutRepository.ts
-│   ├── InMemoryQueueRepository.ts
+│   ├── InMemoryCommandDispatch.ts
 │   ├── InMemoryLayoutRepository.ts
 │   └── index.ts
 ├── types/

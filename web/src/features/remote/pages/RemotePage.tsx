@@ -2,15 +2,16 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useRepositories } from '@/features/core/context/RepositoryContext'
 import { useCommands } from '@/features/learning/hooks/useCommands'
-import { useQueue } from '../hooks/useQueue'
+import { useRealtimeDb } from '@/features/core/firebase'
+import { ref, set } from 'firebase/database'
 import { DeviceLayout } from '@/features/core/types'
 import './RemotePage.css'
 
 export function RemotePage() {
   const { deviceId } = useParams()
-  const { commandRepository, queueRepository, layoutRepository } = useRepositories()
+  const { commandRepository, layoutRepository } = useRepositories()
   const { commands } = useCommands(commandRepository, deviceId ?? null)
-  const { queue, enqueue } = useQueue(queueRepository, deviceId ?? null)
+  const rtdb = useRealtimeDb()
   const [testPanelOpen, setTestPanelOpen] = useState(true)
   const [sendingId, setSendingId] = useState<string | null>(null)
   const [layout, setLayout] = useState<DeviceLayout | null>(null)
@@ -42,21 +43,24 @@ export function RemotePage() {
   }
 
   const handleSend = async (commandId: string) => {
+    if (!deviceId || !rtdb) return
+    const cmd = commands.find((c) => c.id === commandId)
+    if (!cmd) return
+
     setSendingId(commandId)
     try {
-      await enqueue(commandId)
+      await set(ref(rtdb, `devices/${deviceId}/pendingCommand`), {
+        protocol: cmd.protocol,
+        address: Number(cmd.address),
+        command: Number(cmd.command),
+        bits: 32,
+        timestamp: Date.now(),
+      })
     } finally {
       setTimeout(() => setSendingId(null), 500)
     }
   }
-
-  const recentQueue = queue.slice(0, 5)
   const hasLayout = layout && layout.buttons.length > 0
-
-  const getCommandName = (commandId: string): string => {
-    const cmd = commands.find((c) => c.id === commandId)
-    return cmd?.name || commandId.split('/').pop() || 'Unknown'
-  }
 
   return (
     <div className="remote-page">
@@ -98,18 +102,6 @@ export function RemotePage() {
         <div className="remote-empty-state">
           <h2>No Remote Layout</h2>
           <p>This device doesn't have a remote layout yet. Go to <Link to="/designer">Designer</Link> to set up your remote.</p>
-        </div>
-      )}
-
-      {recentQueue.length > 0 && (
-        <div className="remote-queue-status">
-          <h4>Recent</h4>
-          {recentQueue.map((item) => (
-            <div key={item.id} className="test-queue-item">
-              <span className="test-queue-command">{getCommandName(item.commandId)}</span>
-              <span className={`test-queue-badge ${item.status}`}>{item.status}</span>
-            </div>
-          ))}
         </div>
       )}
 

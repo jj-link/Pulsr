@@ -1,23 +1,21 @@
 # Remote - Web UI Status
 
-**Last Updated:** 2026-02-06  
-**Phase:** Phase 2 Complete (Layout-Driven Remote)
+**Last Updated:** 2026-02-07  
+**Phase:** Migrating to RTDB Direct Command Dispatch
 
 ## Plan Evolution
 
-The original plan assumed separate `RemoteButton`, `RemoteGrid`, and `QueueMonitor` components. In practice, we built:
-- **Phase 1:** Empty state + "Test Transmit" collapsible panel for validating the queue → ESP32 → IR pipeline
-- **Phase 2:** Layout-driven grid from Designer, with the test panel still present as a debug fallback
+The original plan assumed a Firestore queue pattern (enqueue document → ESP32 polls → processes). This is being replaced with **direct RTDB writes** — the web writes `pendingCommand` to RTDB and the ESP32 picks it up instantly via its existing RTDB stream (~100ms latency, same pattern as `isLearning`).
 
-The component architecture is simpler than planned — logic is inlined in `RemotePage.tsx` rather than split into many small components. This can be refactored if complexity grows.
+The component architecture is simpler than planned — logic is inlined in `RemotePage.tsx` rather than split into many small components.
 
 ## Progress
 
 ### Foundation
 - [x] React app scaffold (shared)
 - [x] Firebase SDK setup (shared)
-- [x] `FirestoreQueueRepository` (enqueue, subscribe, recent transmissions)
-- [x] `InMemoryQueueRepository` (mock for testing)
+- [x] `FirestoreQueueRepository` (legacy — being replaced by RTDB dispatch)
+- [ ] `RTDBCommandDispatch` (write `pendingCommand` to RTDB)
 
 ### Navigation
 - [x] **Nav dropdown** (`AppLayout.tsx`) — "Remote ▼" lists devices, navigates to `/remote/:deviceId`
@@ -26,15 +24,13 @@ The component architecture is simpler than planned — logic is inlined in `Remo
 
 ### Components (inlined in RemotePage)
 - [x] **Layout grid** — renders buttons from Designer layout (CSS grid, label + color)
-- [x] **Button click → enqueue** — adds to Firestore queue on click
-- [x] **Recent transmissions list** — shows last 5 queue items with status badges
+- [x] **Button click → enqueue** — adds to Firestore queue on click (legacy)
+- [x] **Recent transmissions list** — shows last 5 queue items with status badges (legacy)
 - [x] **Test Transmit panel** — collapsible debug panel listing all learned commands with Send buttons
-- [ ] **RemoteButton** as standalone component (inlined — extract if needed)
-- [ ] **RemoteGrid** as standalone component (inlined — extract if needed)
-- [ ] **QueueMonitor** as standalone component (inlined as recent list)
+- [ ] **Button click → RTDB dispatch** — write `pendingCommand` directly to RTDB on click
+- [ ] **Remove Firestore queue writes** — replace `FirestoreQueueRepository` with `RTDBCommandDispatch`
 - [ ] Optimistic "pressed" state on button click
 - [ ] Error handling with retry option
-- [ ] Real-time status listener per queue item
 
 ### Testing
 - [ ] Unit tests for button/queue logic
@@ -45,14 +41,13 @@ The component architecture is simpler than planned — logic is inlined in `Remo
 
 ## Blockers
 
-~~Requires ESP32 Transmitter track and Designer track.~~ **RESOLVED** — both complete.
-
-No current blockers.
+None.
 
 ## Next Steps
 
-1. Remove or hide Test Transmit panel behind a dev flag (Phase 1 artifact)
-2. Add optimistic press feedback (button shows "sending" state briefly)
-3. Extract `RemoteButton` / `RemoteGrid` components if complexity grows
-4. Add unit tests for enqueue logic
-5. Add Playwright E2E tests (press button, verify queue item created, status updates)
+1. **Replace `FirestoreQueueRepository` with `RTDBCommandDispatch`** — write `pendingCommand` to RTDB instead of Firestore queue
+2. **Update `RemotePage.tsx`** to use new dispatch (load command details from Firestore, send via RTDB)
+3. Add optimistic press feedback (button shows "sending" state briefly)
+4. Remove or hide Test Transmit panel behind a dev flag
+5. Add unit tests for dispatch logic
+6. Add Playwright E2E tests
