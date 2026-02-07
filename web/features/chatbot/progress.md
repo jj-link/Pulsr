@@ -1,7 +1,7 @@
 # Chatbot - Web UI Status
 
-**Last Updated:** 2026-02-02  
-**Phase:** Not Started
+**Last Updated:** 2026-02-06  
+**Phase:** Not Started (lowest priority — all other features come first)
 
 ## Progress
 

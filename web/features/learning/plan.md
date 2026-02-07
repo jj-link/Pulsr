@@ -182,6 +182,12 @@ features/learning/
     ├── LearningModal.test.tsx
     ├── CommandList.test.tsx
     ├── useCommands.test.ts
+## Future: Inline Learning in Designer
+
+The `LearningModal` component and learning flow (pendingSignal listener, learning mode toggle) will be reused inside the Designer's `ButtonConfigModal` as a "Learn New Command" option. This lets users capture IR signals while building a layout without tab-switching. The standalone Learn tab remains for bulk command management and power users.
+
+**Reuse strategy:** The learning logic (set `isLearning`, listen for `pendingSignal`, save command) is already encapsulated in `LearningModal` and `useDevices`/`useCommands` hooks. The Designer will import and compose these — no duplication needed.
+
 ## Future: Shared Device Selection
 
 The Remote tab uses URL-based device selection (`/remote/:deviceId`). In a future iteration, the Learning page could adopt the same pattern (`/learn/:deviceId`) or read the last-selected device from the URL to default its inline `DeviceSelector`. This would allow seamless device context when switching between tabs. For now, the Learning page keeps its own independent `DeviceSelector`.

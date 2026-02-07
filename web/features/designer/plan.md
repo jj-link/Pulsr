@@ -12,6 +12,13 @@
 - No drag-and-drop — simple click-to-place/click-to-edit
 - Same Firestore schema as full version (upgrade path preserved)
 
+### Phase 1.5: Inline Learning in ButtonConfigModal (Next)
+- Add "Learn New Command" option inside ButtonConfigModal alongside the existing command dropdown
+- Reuses `LearningModal` logic (pendingSignal listener, learning mode toggle)
+- Flow: click empty cell → modal → "Learn New Command" → ESP32 captures signal → name it → assign color → done
+- Eliminates tab-switching between Learn and Designer for the common "build a remote" workflow
+- The standalone Learn tab remains for bulk command management and power users
+
 ### Phase 2: Drag-and-Drop Upgrade (Future)
 - Add `@dnd-kit/core` for rearranging buttons by dragging
 - Multi-cell button sizes (span rows/cols)
@@ -34,6 +41,7 @@ Configure individual button properties.
 
 **Responsibilities:**
 - Select command from learned commands list
+- **"Learn New Command" inline option** — triggers learning mode, captures IR signal, saves command, and assigns it to the button in one flow
 - Set label text
 - Set color
 - Delete button option
@@ -249,6 +257,8 @@ Reads:
 
 Writes:
 - Layout configuration to Firestore (via ILayoutRepository)
+- New commands to Firestore when using inline "Learn New Command" (via IDeviceRepository + ICommandRepository)
 
 Triggers:
+- Learning mode on ESP32 when using inline learning (sets `device.isLearning = true`)
 - Transmission track when button clicked on Remote page (uses IQueueRepository)
