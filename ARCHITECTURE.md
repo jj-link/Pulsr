@@ -4,9 +4,12 @@
 
 ## System Architecture
 
-The system revolves around **Firebase** as the central message bus. The Web App and ESP32 never communicate directly; they synchronize state via Firestore.
+The system revolves around **Firebase** as the central message bus. The Web App and ESP32 never communicate directly; they synchronize state through two Firebase services:
 
-**Important:** The ESP32 device does **NOT** serve the web application. The React web app is hosted on **Firebase Hosting** as static files. The ESP32's sole responsibility is IR signal processing (receiving and transmitting). All web UI ↔ ESP32 communication happens asynchronously through Firestore.
+- **Firestore** — structured data storage (commands, layouts, device metadata, queue items)
+- **Realtime Database (RTDB)** — lightweight push notifications to the ESP32 via persistent streaming
+
+**Important:** The ESP32 device does **NOT** serve the web application. The React web app is hosted on **Firebase Hosting** as static files. The ESP32's sole responsibility is IR signal processing (receiving and transmitting). All web UI ↔ ESP32 communication happens asynchronously through Firebase.
 
 ```mermaid
 graph TD
@@ -32,23 +35,31 @@ graph TD
     end
 
     %% Data Store
-    subgraph Firestore
-        Devices[Devices Collection]
-        Commands[Commands Sub-Collection]
-        Queue[Queue Sub-Collection]
-        KB[Knowledge Base]
+    subgraph Firebase
+        subgraph Firestore
+            Devices[Devices Collection]
+            Commands[Commands Sub-Collection]
+            Queue[Queue Sub-Collection]
+            KB[Knowledge Base]
+        end
+        RTDB[Realtime Database]
     end
 
-    %% Connections
+    %% Connections — Web writes
     UI_Designer -->|Reads Layout| Devices
     UI_Remote -->|Writes Command Request| QueueService
     QueueService -->|Adds to Queue| Queue
-    
-    Queue -->|Streams Queue Items| ESP_Tx
-    ESP_Tx -->|Emits IR| IR_LED((IR LED))
+    QueueService -->|Notifies via| RTDB
 
     UI_Learn -->|Sets Learning Mode| Devices
-    ESP_Rx -->|Streams Device State| Devices
+    UI_Learn -->|Notifies via| RTDB
+
+    %% Connections — ESP32 streaming + reads
+    RTDB -->|Streams isLearning + queueNotify| ESP_Rx
+    RTDB -->|Streams isLearning + queueNotify| ESP_Tx
+    ESP_Tx -->|Reads Queue from| Queue
+    ESP_Tx -->|Emits IR| IR_LED((IR LED))
+
     IR_Sensor((IR Sensor)) -->|Raw Signal| ESP_Rx
     ESP_Rx -->|Saves Code| Commands
 
@@ -74,26 +85,39 @@ graph TD
 
 | Action | Feature | Flow |
 | :--- | :--- | :--- |
-| **User Creates Remote** | Designer | UI Creates Layout → Save to DB |
-| **User Teaches Remote** | Learning | UI Sets Mode → ESP Streams Change → ESP Reads IR → Save to DB |
-| **User Presses Button** | Remote | UI Writes to Queue → ESP Streams Queue → ESP Emits IR |
-| **User Asks Help** | Chatbot | UI calls Cloud Function → AI Answers |
+| **User Creates Remote** | Designer | UI creates layout → saves to Firestore |
+| **User Teaches Command** | Learning | UI sets `isLearning` in Firestore + RTDB → RTDB pushes to ESP32 → ESP32 captures IR → saves command to Firestore |
+| **User Presses Button** | Remote | UI adds queue item to Firestore + bumps `queueNotify` in RTDB → RTDB pushes to ESP32 → ESP32 reads queue from Firestore → emits IR |
+| **User Asks Help** | Chatbot | UI calls Cloud Function → AI answers |
 
-## ESP32 ↔ Firestore Communication Strategy
+## ESP32 ↔ Firebase Communication Strategy
 
-The ESP32 uses **Firestore real-time streaming** (Server-Sent Events) instead of polling. This is critical for staying within Firestore's free tier:
+The ESP32 uses a **hybrid Firestore + RTDB** architecture. RTDB provides instant push notifications via Server-Sent Events (SSE); Firestore stores structured data. This replaced an earlier polling design that exceeded the Firestore free tier:
 
-| Approach | Reads/Day (per device) | Latency | Free Tier Impact |
-|----------|----------------------|---------|------------------|
-| Polling (2s) | ~43,200 | Up to 2s | 86% of 50k limit |
-| Polling (2s) × 2 streams | ~86,400 | Up to 2s | **Over limit** |
-| **Streaming** | ~1 per change | Instant | **Negligible** |
+| Approach | Firestore Reads/Day | Latency | Free Tier Impact |
+|----------|---------------------|---------|------------------|
+| Polling (2s) × 2 paths | ~86,400 | Up to 2s | **Over 50k limit** |
+| **RTDB streaming + on-demand Firestore reads** | ~Handful per actual event | ~100ms | **Negligible** |
 
-**Streaming channels:**
-- **Device document stream** — `devices/{deviceId}` — receives `isLearning` and config changes instantly
-- **Queue collection stream** — `devices/{deviceId}/queue` — receives new transmission requests instantly
+### How it works
 
-Both channels use a single persistent HTTPS connection per stream. Firestore counts 1 read per document delivered, not per connection.
+The ESP32 opens a single persistent SSE connection to RTDB path `/devices/{deviceId}`. This stream delivers two signals:
+
+- **`isLearning`** (boolean) — set by the web UI when the user enters learning mode
+- **`queueNotify`** (timestamp) — bumped by the web UI when a new command is enqueued
+
+When the stream fires, the ESP32 main loop processes the event:
+- `isLearning` change → starts or stops the `LearningStateMachine`
+- `queueNotify` change → triggers `QueueProcessor` to read pending items from Firestore once
+
+### Why two databases?
+
+| Database | Role | What's stored |
+|----------|------|---------------|
+| **RTDB** | Real-time push channel | `isLearning`, `queueNotify` (tiny flags per device) |
+| **Firestore** | Structured data store | Commands, layouts, queue items, device metadata |
+
+The web app writes to **both** on every user action that the ESP32 needs to react to. Firestore remains the source of truth; RTDB is a lightweight notification bell.
 
 ## Navigation Structure
 
