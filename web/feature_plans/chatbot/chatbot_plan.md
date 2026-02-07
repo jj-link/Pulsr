@@ -2,6 +2,48 @@
 
 **Purpose:** Floating chat widget for AI-powered troubleshooting assistance.
 
+## Architecture
+
+```mermaid
+flowchart TD
+    subgraph WebUI ["Web UI (Chatbot Feature)"]
+        CW[ChatWidget]
+        ML[MessageList]
+        IA[InputArea]
+    end
+
+    subgraph Hooks
+        useChat[useChat]
+        useSession[useChatSession]
+    end
+
+    subgraph Repositories
+        ChatRepo[IChatRepository]
+    end
+
+    subgraph CloudFunction ["Cloud Function (Backend)"]
+        Handler[chatHandler]
+        AI[IAIProvider]
+        RAG[IKnowledgeRetriever]
+    end
+
+    subgraph Firebase
+        FS_KB["Firestore: knowledgeBase"]
+        FS_Sessions["Firestore: chatSessions"]
+    end
+
+    CW --> ML
+    CW --> IA
+    IA -->|"user message"| useChat --> ChatRepo
+    ChatRepo -->|"POST /chat"| Handler
+    Handler --> RAG --> FS_KB
+    Handler --> AI
+    AI -->|"AI response"| Handler
+    Handler -->|"stores history"| FS_Sessions
+    Handler -->|"response"| ChatRepo
+    ChatRepo --> useChat --> ML
+```
+
 ## Components
 
 ### ChatWidget

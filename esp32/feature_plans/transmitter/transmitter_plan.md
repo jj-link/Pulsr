@@ -4,6 +4,38 @@
 
 ## Architecture
 
+```mermaid
+flowchart TD
+    subgraph Web ["Web UI"]
+        Btn["User presses button"]
+    end
+
+    subgraph Firebase
+        RTDB_Cmd["RTDB: /devices/{id}/pendingCommand"]
+    end
+
+    subgraph ESP32 ["ESP32 Transmitter"]
+        FM[FirebaseManager]
+        PE[ProtocolEncoders]
+        TX[ESP32IRTransmitter]
+        LED[NeoPixel LED]
+    end
+
+    IR_LED((IR LED))
+    TV((Target Device))
+
+    Btn -->|"writes {protocol, address,\ncommand, bits, timestamp}"| RTDB_Cmd
+    RTDB_Cmd -->|"RTDB stream (~100ms)"| FM
+    FM -->|"PendingCommand struct"| PE
+    PE -->|"raw IR timing"| TX
+    TX -->|"38kHz carrier"| IR_LED
+    IR_LED -->|"infrared"| TV
+    FM -->|"clears pendingCommand"| RTDB_Cmd
+    FM -.->|"status feedback"| LED
+```
+
+### File Layout
+
 ```
 include/transmitter/
 └── IIRTransmitter.h         # Hardware abstraction for IR transmitter
@@ -96,15 +128,6 @@ The built-in NeoPixel RGB LED provides visual feedback during transmission:
 
 Feedback is delivered via callback from `FirebaseManager` command handler to `main.cpp`.
 
-## Current Status
-
-- **Command dispatch:** Direct RTDB `pendingCommand` streaming (complete)
-- **RTDB streaming:** ESP32 streams `/devices/{deviceId}` for `isLearning` and `pendingCommand` (working)
-- **Web writes:** Button press writes `pendingCommand` object directly to RTDB (working)
-- **NeoPixel feedback:** Wired via callback to main.cpp LED handler
-- **Protocol encoding:** NEC, Samsung, Sony, RAW all working
-- **`isLearning` pattern:** Proven ~100ms latency via RTDB streaming — `pendingCommand` replicates this pattern
-
 ## Integration
 
-See `docs/contracts/transmitter.md` for Firestore data model and integration flow.
+The transmitter integrates with the **Remote** web feature. The web UI writes a `pendingCommand` object to RTDB, the ESP32 picks it up via its RTDB stream, encodes the IR signal, and transmits it. The ESP32 clears the `pendingCommand` after transmission.

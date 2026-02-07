@@ -4,6 +4,43 @@
 
 ## Architecture
 
+```mermaid
+flowchart TD
+    subgraph Web ["Web UI"]
+        LearnBtn["User clicks 'Learn'"]
+    end
+
+    subgraph Firebase
+        FS_Device["Firestore: device.isLearning"]
+        RTDB_Learn["RTDB: /devices/{id}/isLearning"]
+        FS_Signal["Firestore: device.pendingSignal"]
+        FS_Cmd["Firestore: device/commands/{id}"]
+    end
+
+    subgraph ESP32 ["ESP32 Receiver"]
+        FM[FirebaseManager]
+        LSM[LearningStateMachine]
+        SC[ESP32SignalCapture]
+        PD[IRLibProtocolDecoder]
+    end
+
+    IR_Sensor((IR Sensor))
+
+    LearnBtn -->|"sets isLearning = true"| FS_Device
+    LearnBtn -->|"sets isLearning = true"| RTDB_Learn
+    RTDB_Learn -->|"RTDB stream (~100ms)"| FM
+    FM -->|"notifies"| LSM
+    LSM -->|"enables receiver"| SC
+    IR_Sensor -->|"raw IR pulses"| SC
+    SC -->|"decode_results"| PD
+    PD -->|"DecodedSignal"| LSM
+    LSM -->|"writes pendingSignal"| FS_Signal
+    FS_Signal -->|"web listener"| Web
+    Web -->|"user names + saves"| FS_Cmd
+```
+
+### File Layout
+
 ```
 include/receiver/
 ├── ISignalCapture.h        # Hardware abstraction for IR receiver
@@ -98,4 +135,4 @@ This verifies real IR signal capture with physical hardware.
 
 ## Integration
 
-See `docs/contracts/receiver.md` for Firestore data model and integration flow.
+The receiver integrates with the **Learning** web feature. The web UI triggers learning mode via Firestore + RTDB, the ESP32 captures and decodes the IR signal, then writes a `pendingSignal` back to Firestore for the web to display.

@@ -2,6 +2,47 @@
 
 **Purpose:** Provide remote control buttons that trigger IR transmission.
 
+## Architecture
+
+```mermaid
+flowchart TD
+    subgraph WebUI ["Web UI (Remote Feature)"]
+        RP[RemotePage]
+        RG[RemoteGrid]
+        RB[RemoteButton]
+        TS[TransmitStatus]
+    end
+
+    subgraph Hooks
+        useTx[useTransmission]
+        useLayout[useLayout]
+        useCmds[useCommands]
+    end
+
+    subgraph Repositories
+        CmdRepo[ICommandRepository]
+        LayoutRepo[ILayoutRepository]
+    end
+
+    subgraph Firebase
+        FS_Layout["Firestore: device.layout"]
+        FS_Cmds["Firestore: devices/{id}/commands"]
+        RTDB_Cmd["RTDB: /devices/{id}/pendingCommand"]
+    end
+
+    ESP32((ESP32))
+    TV((Target Device))
+
+    RP --> useLayout --> LayoutRepo --> FS_Layout
+    RP --> RG --> RB
+    RB -->|"click"| useTx
+    useTx -->|"loads command details"| useCmds --> CmdRepo --> FS_Cmds
+    useTx -->|"writes pendingCommand"| RTDB_Cmd
+    RTDB_Cmd -->|"stream (~100ms)"| ESP32
+    ESP32 -->|"transmits IR"| TV
+    RB --> TS
+```
+
 ## Navigation & Device Selection
 
 The "Remote" tab in the top nav is a **dropdown menu** listing all devices. Selecting a device navigates to `/remote/:deviceId` and opens the remote view for that device.

@@ -2,6 +2,45 @@
 
 **Purpose:** Provide a click-to-place grid editor for custom remote layouts.
 
+## Architecture
+
+```mermaid
+flowchart TD
+    subgraph WebUI ["Web UI (Designer Feature)"]
+        DP[DesignerPage]
+        GC[GridCell]
+        BCM[ButtonConfigModal]
+        LM["LearningModal (reused)"]
+    end
+
+    subgraph Hooks
+        useLayout[useLayout]
+        useCmds[useCommands]
+        useLearning[useLearningMode]
+    end
+
+    subgraph Repositories
+        LayoutRepo[ILayoutRepository]
+        CmdRepo[ICommandRepository]
+        DeviceRepo[IDeviceRepository]
+    end
+
+    subgraph Firebase
+        FS_Layout["Firestore: devices/{id}.layout"]
+        FS_Cmds["Firestore: devices/{id}/commands"]
+        FS_Device["Firestore: devices/{id}"]
+        RTDB_Learn["RTDB: /devices/{id}/isLearning"]
+    end
+
+    DP --> useLayout --> LayoutRepo --> FS_Layout
+    DP --> GC -->|"click"| BCM
+    BCM --> useCmds --> CmdRepo --> FS_Cmds
+    BCM -->|"Learn New Command"| LM
+    LM --> useLearning --> DeviceRepo --> FS_Device
+    useLearning -->|"sets isLearning"| RTDB_Learn
+    BCM -->|"assign command + save"| useLayout
+```
+
 ## Build Strategy
 
 ### Phase 1: Click-to-Place Grid (Current)

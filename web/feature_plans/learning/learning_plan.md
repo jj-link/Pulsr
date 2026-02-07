@@ -2,6 +2,47 @@
 
 **Purpose:** Provide UI for triggering learning mode and viewing captured commands.
 
+## Architecture
+
+```mermaid
+flowchart TD
+    subgraph WebUI ["Web UI (Learning Feature)"]
+        DS[DeviceSelector]
+        LM[LearningModal]
+        CL[CommandList]
+    end
+
+    subgraph Hooks
+        useDevices[useDevices]
+        useLearning[useLearningMode]
+        useCmds[useCommands]
+    end
+
+    subgraph Repositories
+        DeviceRepo[IDeviceRepository]
+        CmdRepo[ICommandRepository]
+    end
+
+    subgraph Firebase
+        FS_Device["Firestore: devices/{id}"]
+        FS_Cmds["Firestore: devices/{id}/commands"]
+        RTDB_Learn["RTDB: /devices/{id}/isLearning"]
+        FS_Signal["Firestore: device.pendingSignal"]
+    end
+
+    ESP32((ESP32))
+
+    DS --> useDevices --> DeviceRepo --> FS_Device
+    LM --> useLearning --> DeviceRepo
+    useLearning -->|"sets isLearning"| FS_Device
+    useLearning -->|"sets isLearning"| RTDB_Learn
+    RTDB_Learn -->|"stream"| ESP32
+    ESP32 -->|"captures IR → writes"| FS_Signal
+    FS_Signal -->|"real-time listener"| LM
+    LM -->|"user names + saves"| CmdRepo --> FS_Cmds
+    CL --> useCmds --> CmdRepo
+```
+
 ## Components
 
 ### LearningModal
