@@ -43,7 +43,7 @@ void transmitSamsungPower() {
     // Samsung32 data format: [customer][~customer][data][~data]
     // customer=0x40, ~customer=0xBF, data=0xE0, ~data=0x1F
     // Full 32-bit word: 0x40BFE01F
-    uint64_t samsungData = 0x40BFE01F;
+    uint64_t samsungData = 0xE0E040BF;
     
     Serial.print("Data: 0x");
     Serial.println((unsigned long)samsungData, HEX);

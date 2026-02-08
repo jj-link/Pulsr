@@ -35,7 +35,7 @@
   - [ ] Update `FirebaseManager` RTDB parsing: read `value` instead of `address`/`command`
   - [ ] Update `onCommandReceived`: dispatch to native senders (`transmitSamsung`/`transmitNEC`/`transmitSony`) with raw `value`
   - [ ] Remove custom `ProtocolEncoders` from production transmit path
-  - [ ] Hardware test: verify Samsung TV responds to native sender
+  - [x] Hardware test: verify Samsung TV responds to native sender (confirmed 2026-02-07)
 
 ### Firebase Integration
 - [x] RTDB streaming for `isLearning` (working, ~100ms latency)
@@ -54,8 +54,7 @@ None.
 
 ## Next Steps
 
-1. Implement native sender migration (ESP32 + web)
+1. Implement native sender migration (ESP32 + web code changes)
 2. Clear Firestore, re-learn Samsung Power with corrected data model
 3. Validate full loop: web button → RTDB → ESP32 native sender → TV responds
-4. Update `ir_native_samsung_test` with verified raw value
-5. Monitor WiFi stability in long-running sessions
+4. Monitor WiFi stability in long-running sessions

@@ -13,6 +13,8 @@ describe('CommandList', () => {
       protocol: 'NEC',
       address: '0x00',
       command: '0x01',
+      value: '16724175',
+      bits: 32,
       capturedAt: new Date('2024-01-01'),
     },
     {
@@ -22,6 +24,8 @@ describe('CommandList', () => {
       protocol: 'NEC',
       address: '0x00',
       command: '0x10',
+      value: '16712445',
+      bits: 32,
       capturedAt: new Date('2024-01-02'),
     },
   ]

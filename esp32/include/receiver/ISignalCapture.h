@@ -8,6 +8,7 @@ public:
     virtual ~ISignalCapture() = default;
     
     virtual void enable() = 0;
+    virtual void disable() = 0;
     virtual void resume() = 0;
     virtual bool hasSignal() = 0;
     virtual bool decode(decode_results* results) = 0;

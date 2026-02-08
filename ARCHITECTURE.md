@@ -104,7 +104,7 @@ The ESP32 opens a single persistent SSE connection to RTDB path `/devices/{devic
 
 When the stream fires, the ESP32 main loop processes the event:
 - `isLearning` change → starts or stops the `LearningStateMachine`
-- `pendingCommand` change → ESP32 encodes and transmits IR immediately, then clears the field
+- `pendingCommand` change → ESP32 transmits IR immediately via the library's native sender, then clears the field
 
 ### Why two databases?
 
@@ -164,7 +164,7 @@ All major subsystems communicate through well-defined interfaces rather than con
 | `ICommandRepository` | Command storage | `FirestoreCommandRepository`, `InMemoryCommandRepository` |
 | `ICommandDispatch` | IR command dispatch | `RTDBCommandDispatch`, `InMemoryCommandDispatch` |
 | `IProtocolDecoder` | IR signal decoding | `NECDecoder`, `SonyDecoder`, `SamsungDecoder` |
-| `IProtocolEncoder` | IR signal encoding | `NECEncoder`, `SonyEncoder`, `SamsungEncoder` |
+| `IProtocolEncoder` | IR signal encoding (retained for RAW transmission; production path uses library native senders) | `NECEncoder`, `SonyEncoder`, `SamsungEncoder` |
 | `ISignalCapture` | Hardware IR input | `ESP32SignalCapture`, `MockSignalCapture` |
 | `IIRTransmitter` | Hardware IR output | `ESP32Transmitter`, `MockTransmitter` |
 | `IAIProvider` | AI chat completions | `OpenAIProvider`, `AnthropicProvider`, `MockAIProvider` |

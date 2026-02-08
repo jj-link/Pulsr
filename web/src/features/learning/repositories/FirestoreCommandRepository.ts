@@ -79,6 +79,8 @@ export class FirestoreCommandRepository implements ICommandRepository {
       protocol: data.protocol,
       address: data.address,
       command: data.command,
+      value: data.value ?? '',
+      bits: data.bits ?? 32,
       capturedAt: data.capturedAt instanceof Timestamp 
         ? data.capturedAt.toDate() 
         : new Date(data.capturedAt),

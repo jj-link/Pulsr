@@ -10,6 +10,7 @@ public:
     ~ESP32SignalCapture() override;
     
     void enable() override;
+    void disable() override;
     void resume() override;
     bool hasSignal() override;
     bool decode(decode_results* results) override;

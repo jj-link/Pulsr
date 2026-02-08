@@ -26,6 +26,8 @@ describe('useCommands', () => {
       protocol: 'NEC',
       address: '0x00',
       command: '0x01',
+      value: '16724175',
+      bits: 32,
     })
 
     const { result } = renderHook(() => useCommands(repository, deviceId))
@@ -55,6 +57,8 @@ describe('useCommands', () => {
       protocol: 'NEC',
       address: '0x00',
       command: '0x10',
+      value: '16712445',
+      bits: 32,
     })
 
     await waitFor(() => {
@@ -71,6 +75,8 @@ describe('useCommands', () => {
       protocol: 'NEC',
       address: '0x00',
       command: '0x01',
+      value: '16724175',
+      bits: 32,
     })
 
     const { result } = renderHook(() => useCommands(repository, deviceId))

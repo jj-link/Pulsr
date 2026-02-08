@@ -22,8 +22,7 @@ using LearningStateCallback = std::function<void(bool isLearning)>;
 // Command received via RTDB pendingCommand
 struct PendingCommand {
     String protocol;
-    uint32_t address;
-    uint32_t command;
+    uint64_t value;
     uint16_t bits;
 };
 

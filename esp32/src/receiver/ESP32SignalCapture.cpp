@@ -12,6 +12,10 @@ void ESP32SignalCapture::enable() {
     irrecv->enableIRIn();
 }
 
+void ESP32SignalCapture::disable() {
+    irrecv->disableIRIn();
+}
+
 void ESP32SignalCapture::resume() {
     irrecv->resume();
 }

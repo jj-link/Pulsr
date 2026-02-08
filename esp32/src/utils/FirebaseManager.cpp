@@ -114,10 +114,10 @@ void FirebaseManager::update() {
         
         Serial.print("[RTDB] Command received: ");
         Serial.print(pendingCmd.protocol);
-        Serial.print(" addr=0x");
-        Serial.print(pendingCmd.address, HEX);
-        Serial.print(" cmd=0x");
-        Serial.println(pendingCmd.command, HEX);
+        Serial.print(" value=0x");
+        Serial.print((unsigned long)pendingCmd.value, HEX);
+        Serial.print(" bits=");
+        Serial.println(pendingCmd.bits);
         
         if (commandCallback) {
             commandCallback(pendingCmd);
@@ -166,8 +166,7 @@ void FirebaseManager::onStreamData(FirebaseStream data) {
             FirebaseJsonData result;
             
             if (json.get(result, "protocol")) instance->pendingCmd.protocol = result.stringValue;
-            if (json.get(result, "address")) instance->pendingCmd.address = result.intValue;
-            if (json.get(result, "command")) instance->pendingCmd.command = result.intValue;
+            if (json.get(result, "value")) instance->pendingCmd.value = strtoull(result.stringValue.c_str(), nullptr, 10);
             if (json.get(result, "bits")) instance->pendingCmd.bits = result.intValue;
             
             instance->pendingCommandReceived = true;
@@ -189,8 +188,7 @@ void FirebaseManager::onStreamData(FirebaseStream data) {
             cmdJson.setJsonData(cmdData.stringValue);
             FirebaseJsonData r;
             if (cmdJson.get(r, "protocol")) instance->pendingCmd.protocol = r.stringValue;
-            if (cmdJson.get(r, "address")) instance->pendingCmd.address = r.intValue;
-            if (cmdJson.get(r, "command")) instance->pendingCmd.command = r.intValue;
+            if (cmdJson.get(r, "value")) instance->pendingCmd.value = strtoull(r.stringValue.c_str(), nullptr, 10);
             if (cmdJson.get(r, "bits")) instance->pendingCmd.bits = r.intValue;
             instance->pendingCommandReceived = true;
         }

@@ -81,6 +81,8 @@ export class InMemoryCommandRepository implements ICommandRepository {
         protocol: 'NEC',
         address: '0x00',
         command: '0x01',
+        value: '16724175',
+        bits: 32,
       },
       {
         deviceId,
@@ -88,6 +90,8 @@ export class InMemoryCommandRepository implements ICommandRepository {
         protocol: 'NEC',
         address: '0x00',
         command: '0x10',
+        value: '16712445',
+        bits: 32,
       },
       {
         deviceId,
@@ -95,6 +99,8 @@ export class InMemoryCommandRepository implements ICommandRepository {
         protocol: 'NEC',
         address: '0x00',
         command: '0x11',
+        value: '16750695',
+        bits: 32,
       },
       {
         deviceId,
@@ -102,6 +108,8 @@ export class InMemoryCommandRepository implements ICommandRepository {
         protocol: 'NEC',
         address: '0x00',
         command: '0x20',
+        value: '16718055',
+        bits: 32,
       },
       {
         deviceId,
@@ -109,6 +117,8 @@ export class InMemoryCommandRepository implements ICommandRepository {
         protocol: 'NEC',
         address: '0x00',
         command: '0x21',
+        value: '16756815',
+        bits: 32,
       },
     ]
 

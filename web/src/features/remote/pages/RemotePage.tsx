@@ -51,9 +51,8 @@ export function RemotePage() {
     try {
       await set(ref(rtdb, `devices/${deviceId}/pendingCommand`), {
         protocol: cmd.protocol,
-        address: Number(cmd.address),
-        command: Number(cmd.command),
-        bits: 32,
+        value: cmd.value,
+        bits: cmd.bits,
         timestamp: Date.now(),
       })
     } finally {

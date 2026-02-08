@@ -83,6 +83,8 @@ export function DesignerPage() {
       protocol: signal.protocol,
       address: signal.address,
       command: signal.command,
+      value: signal.value,
+      bits: signal.bits,
     })
     await clearPendingSignal(selectedDeviceId)
     await setLearningMode(selectedDeviceId, false)

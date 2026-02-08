@@ -24,7 +24,6 @@
 
 // Transmitter components
 #include "transmitter/ESP32IRTransmitter.h"
-#include "transmitter/IRLibProtocolEncoders.h"
 
 // Firebase integration
 #include "utils/FirebaseManager.h"
@@ -42,7 +41,6 @@ LearningStateMachine learningStateMachine(&signalCapture, &protocolDecoder, LEAR
 
 // Transmitter subsystem
 ESP32IRTransmitter irTransmitter(IR_SEND_PIN, false);  // GPIO 4, not inverted
-IRLibProtocolEncoders protocolEncoder;
 
 // Firebase integration
 FirebaseManager firebaseManager(
@@ -137,12 +135,22 @@ void onCommandReceived(const PendingCommand& cmd) {
     statusLED.setPixelColor(0, COLOR_TX_PROCESSING);
     statusLED.show();
     
-    // Encode the command
-    EncodedSignal encoded = protocolEncoder.encode(
-        cmd.protocol.c_str(), cmd.address, cmd.command, cmd.bits
-    );
+    Serial.print("[TX] Dispatching: ");
+    Serial.print(cmd.protocol);
+    Serial.print(" value=0x");
+    Serial.print((unsigned long)cmd.value, HEX);
+    Serial.print(" bits=");
+    Serial.println(cmd.bits);
     
-    if (!encoded.isKnownProtocol) {
+    // Dispatch to library's native sender based on protocol
+    TransmitResult result;
+    if (cmd.protocol == "SAMSUNG") {
+        result = irTransmitter.transmitSamsung(cmd.value, cmd.bits);
+    } else if (cmd.protocol == "NEC") {
+        result = irTransmitter.transmitNEC((uint32_t)cmd.value, cmd.bits);
+    } else if (cmd.protocol == "SONY") {
+        result = irTransmitter.transmitSony((uint32_t)cmd.value, cmd.bits);
+    } else {
         Serial.print("[TX] Unknown protocol: ");
         Serial.println(cmd.protocol);
         statusLED.setPixelColor(0, COLOR_TX_FAILED);
@@ -151,23 +159,11 @@ void onCommandReceived(const PendingCommand& cmd) {
         return;
     }
     
-    // Transmit the encoded signal
-    TransmitResult result = irTransmitter.transmit(
-        encoded.rawData, encoded.rawLength, encoded.frequency
-    );
-    
-    // Clean up allocated memory
-    if (encoded.rawData) {
-        delete[] encoded.rawData;
-    }
-    
     if (result.success) {
         Serial.print("[TX] Transmitted OK: ");
         Serial.print(cmd.protocol);
-        Serial.print(" addr=0x");
-        Serial.print(cmd.address, HEX);
-        Serial.print(" cmd=0x");
-        Serial.println(cmd.command, HEX);
+        Serial.print(" value=0x");
+        Serial.println((unsigned long)cmd.value, HEX);
         statusLED.setPixelColor(0, COLOR_TX_SUCCESS);
         statusLED.show();
         txLedRevertTime = millis() + 500;
@@ -184,9 +180,11 @@ void onFirebaseLearningModeChanged(bool isLearning) {
     Serial.println(isLearning ? "ON" : "OFF");
     
     if (isLearning) {
+        signalCapture.enable();
         learningStateMachine.startLearning();
     } else {
         learningStateMachine.stopLearning();
+        signalCapture.disable();
     }
 }
 
@@ -204,9 +202,8 @@ void setup() {
     statusLED.setPixelColor(0, COLOR_CONNECTING);
     statusLED.show();
     
-    // Initialize IR receiver
-    signalCapture.enable();
-    Serial.print("[Pulsr] IR Receiver initialized on GPIO ");
+    // IR receiver is initialized on-demand when learning mode is activated
+    Serial.print("[Pulsr] IR Receiver on GPIO ");
     Serial.println(IR_RECEIVE_PIN);
     
     // Initialize IR transmitter

@@ -5,6 +5,8 @@ export interface IRCommand {
   protocol: string
   address: string
   command: string
+  value: string
+  bits: number
   capturedAt: Date
 }
 
