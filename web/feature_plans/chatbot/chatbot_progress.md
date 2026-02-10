@@ -1,50 +1,31 @@
-# Chatbot - Web UI Status
+# Chatbot — v1 Progress
 
-**Last Updated:** 2026-02-06  
-**Phase:** Not Started (lowest priority — all other features come first)
+**Last Updated:** 2026-02-09  
+**Phase:** Not Started
 
-## Progress
+## Checklist
 
-### Foundation
-- [ ] React app scaffold
-- [ ] Firebase Cloud Functions setup
+### Backend
+- [ ] Initialize Firebase Cloud Functions project (`functions/`)
+- [ ] Create chat function — receives message + history, returns AI response
+- [ ] Write system prompt for Pulsr troubleshooting context
+- [ ] Deploy and verify function works via curl/Postman
 
-### Components
-- [ ] **ChatWidget**
-  - [ ] Floating button
-  - [ ] Panel toggle animation
-  - [ ] Unread indicator
-- [ ] **MessageList**
-  - [ ] Message rendering
-  - [ ] Auto-scroll
-  - [ ] Loading indicator
-- [ ] **InputArea**
-  - [ ] Text input
-  - [ ] Send button
-  - [ ] Character limit
-
-### Cloud Function
-- [ ] Express.js endpoint
-- [ ] AI provider integration (OpenAI/Anthropic)
-- [ ] Knowledge base retrieval (RAG)
-- [ ] Session management
-- [ ] Rate limiting
-- [ ] Message sanitization
+### Frontend
+- [ ] ChatWidget component — floating button + expandable panel
+- [ ] useChat hook — messages state, loading state, send function
+- [ ] IChatRepository + CloudFunctionChatRepository
+- [ ] MockChatRepository for dev/testing
+- [ ] Wire ChatWidget into the app layout
 
 ### Testing
-- [ ] Unit tests for UI components
-- [ ] Integration tests with mock function
-- [ ] Cloud Function unit tests (prompt construction)
-- [ ] Playwright E2E tests
-
-## Blockers
-
-Requires knowledge base content from other tracks.
+- [ ] useChat hook unit tests (with MockChatRepository)
+- [ ] ChatWidget component tests
+- [ ] Playwright E2E: open → send → receive response
 
 ## Next Steps
 
-1. Wait for other tracks to generate documentation
-2. Create knowledge base structure in Firestore
-3. Set up Firebase Cloud Functions
-4. Implement prompt engineering with TDD
-5. Build ChatWidget UI
+1. Set up Cloud Functions project
+2. Get a basic round-trip working (hardcoded response, no AI)
+3. Add AI API call
+4. Build the chat UI
