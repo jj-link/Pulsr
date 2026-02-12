@@ -1,70 +1,132 @@
 .remote-page {
-  max-width: 600px;
+  --panel-bg: linear-gradient(180deg, #f5f6f8 0%, #e7eaf0 100%);
+  --shell-top: #f0f2f5;
+  --shell-bottom: #d7dce4;
+  --shell-edge: #bdc5d2;
+  --ink: #18202d;
+  --muted: #5e6677;
+  --accent: #2d5cff;
+
+  max-width: 760px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  font-family: 'Rajdhani', 'Orbitron', 'Trebuchet MS', sans-serif;
+  color: var(--ink);
 }
 
 .remote-empty-state {
   text-align: center;
-  padding: 2rem;
-  border: 1px dashed #444;
-  border-radius: 8px;
-  margin-bottom: 2rem;
+  padding: 2rem 1.4rem;
+  border: 1px dashed #9aa7ba;
+  border-radius: 16px;
+  background: #f7f9fc;
 }
 
 .remote-empty-state h2 {
-  margin: 0 0 0.5rem;
-  font-size: 1.25rem;
+  margin: 0 0 0.45rem;
+  font-size: 1.45rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 .remote-empty-state p {
-  color: #888;
+  color: var(--muted);
   margin: 0;
+  font-size: 0.95rem;
 }
 
 .remote-empty-state a {
-  color: #646cff;
+  color: var(--accent);
+  font-weight: 700;
 }
 
 .remote-loading {
   text-align: center;
-  color: #888;
-  font-size: 0.9rem;
+  color: var(--muted);
+  font-size: 0.92rem;
   padding: 2rem;
+}
+
+.remote-shell {
+  width: min(100%, 430px);
+  margin: 0 auto;
+  padding: 0.95rem 1.05rem 1.15rem;
+  border-radius: 40px;
+  background: var(--panel-bg);
+  border: 1px solid var(--shell-edge);
+  box-shadow:
+    0 26px 38px rgba(18, 25, 39, 0.2),
+    inset 0 3px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -5px 12px rgba(129, 138, 155, 0.24);
+}
+
+.remote-shell-top {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.remote-shell-top { margin-bottom: 0.75rem; }
+
+.remote-shell-pill {
+  width: 96px;
+  height: 7px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #bcc2ce, #eceff4, #bcc2ce);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.75);
 }
 
 .remote-grid {
   display: grid;
-  gap: 10px;
-  margin-bottom: 1.5rem;
+  gap: 0.74rem;
 }
 
 .remote-cell-empty {
   aspect-ratio: 1;
-  min-height: 72px;
+  min-height: 64px;
 }
 
 .remote-btn {
+  --btn-color: #3f587f;
+
   aspect-ratio: 1;
-  min-height: 72px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  border: none;
+  min-height: 64px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
   cursor: pointer;
-  transition: transform 0.08s, box-shadow 0.15s, opacity 0.15s;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.2), transparent 54%),
+    linear-gradient(190deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.18)),
+    var(--btn-color);
+  box-shadow:
+    0 8px 16px rgba(24, 33, 49, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition: transform 120ms ease, box-shadow 140ms ease, filter 140ms ease;
   font-family: inherit;
+  padding: 0.3rem;
 }
 
 .remote-btn:hover {
-  transform: scale(1.04);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+  filter: brightness(1.03);
+  box-shadow:
+    0 11px 18px rgba(17, 26, 41, 0.27),
+    inset 0 1px 0 rgba(255, 255, 255, 0.27);
 }
 
 .remote-btn:active {
-  transform: scale(0.93);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px) scale(0.97);
+  box-shadow:
+    0 4px 8px rgba(17, 26, 41, 0.28),
+    inset 0 2px 4px rgba(0, 0, 0, 0.24);
+}
+
+.remote-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .remote-btn.sending {
@@ -72,33 +134,94 @@
   cursor: not-allowed;
 }
 
-.remote-btn-label {
-  color: #fff;
+.remote-btn-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.22rem;
+}
+
+.remote-btn-icon {
+  width: 1.12rem;
+  height: 1.12rem;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.28));
+}
+
+.remote-btn-primary {
   font-weight: 700;
-  font-size: 0.9rem;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  font-size: 1.28rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.remote-btn-label {
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   text-align: center;
-  padding: 0 6px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+  padding: 0 0.2rem;
+}
+
+.remote-btn.intent-number,
+.remote-btn.intent-direction-up,
+.remote-btn.intent-direction-down,
+.remote-btn.intent-direction-left,
+.remote-btn.intent-direction-right,
+.remote-btn.intent-ok {
+  border-radius: 999px;
+}
+
+.remote-btn.intent-power {
+  --btn-color: #ce3448;
+}
+
+.remote-btn.intent-mute {
+  --btn-color: #67606c;
+}
+
+.remote-btn.intent-channel-up,
+.remote-btn.intent-channel-down {
+  --btn-color: #3f5674;
+}
+
+.remote-btn.intent-play,
+.remote-btn.intent-pause,
+.remote-btn.intent-stop,
+.remote-btn.intent-rewind,
+.remote-btn.intent-fast-forward,
+.remote-btn.intent-next,
+.remote-btn.intent-previous,
+.remote-btn.intent-record {
+  aspect-ratio: 1.15;
+  border-radius: 14px;
 }
 
 .test-panel {
-  border: 1px solid #333;
-  border-radius: 8px;
+  border: 1px solid #c6cfdd;
+  border-radius: 14px;
   overflow: hidden;
+  background: #f5f7fb;
+  box-shadow: 0 8px 18px rgba(24, 33, 49, 0.08);
 }
 
 .test-panel-toggle {
   width: 100%;
-  padding: 0.75rem 1rem;
-  background-color: #1a1a1a;
+  padding: 0.78rem 0.95rem;
+  background: #ecf0f6;
   border: none;
-  color: #ccc;
-  font-size: 0.9rem;
-  font-weight: 600;
+  border-bottom: 1px solid #d9e0eb;
+  color: #2f3a50;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   font-family: inherit;
   text-align: left;
   cursor: pointer;
@@ -106,124 +229,115 @@
 }
 
 .test-panel-toggle:hover {
-  background-color: #222;
+  background: #e3e8f0;
 }
 
 .test-panel-content {
-  padding: 1rem;
+  padding: 0.84rem;
 }
 
 .test-panel-empty {
-  color: #666;
-  font-size: 0.9rem;
+  color: #586074;
+  font-size: 0.88rem;
   text-align: center;
 }
 
 .test-panel-empty a {
-  color: #646cff;
+  color: var(--accent);
+  font-weight: 700;
 }
 
 .test-command-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 
 .test-command-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0.75rem;
-  background-color: #1a1a1a;
-  border-radius: 6px;
+  padding: 0.5rem 0.7rem;
+  background: #ffffff;
+  border: 1px solid #d8deea;
+  border-radius: 10px;
 }
 
 .test-command-info {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.62rem;
+  min-width: 0;
 }
 
 .test-command-name {
-  font-weight: 500;
-  color: #eee;
+  font-weight: 700;
+  color: #1e2a3d;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .test-command-protocol {
-  font-size: 0.75rem;
-  color: #888;
-  background-color: #2a2a2a;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
+  font-size: 0.7rem;
+  color: #4f5f77;
+  background: #edf2fa;
+  padding: 0.14rem 0.44rem;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
 }
 
 .test-send-btn {
-  padding: 0.35rem 1rem;
+  padding: 0.34rem 0.86rem;
   border: none;
-  border-radius: 4px;
-  background-color: #646cff;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #3d6aff, #2b56e6);
   color: #fff;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-family: inherit;
-  font-weight: 500;
+  font-weight: 700;
+  letter-spacing: 0.03em;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: transform 0.1s, filter 0.15s;
 }
 
 .test-send-btn:hover {
-  background-color: #535bf2;
+  transform: translateY(-1px);
+  filter: brightness(1.05);
 }
 
 .test-send-btn.sending {
-  background-color: #444;
+  background: #78839a;
   cursor: not-allowed;
 }
 
 .test-send-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.88;
 }
 
-@media (prefers-color-scheme: light) {
-  .remote-empty-state {
-    border-color: #ddd;
+@media (max-width: 640px) {
+  .remote-page {
+    gap: 0.86rem;
   }
 
-  .remote-empty-state p {
-    color: #666;
+  .remote-shell {
+    width: 100%;
+    border-radius: 32px;
+    padding: 0.8rem 0.78rem 0.95rem;
+  }
+
+  .remote-grid {
+    gap: 0.56rem;
   }
 
   .remote-btn {
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+    min-height: 58px;
   }
 
-  .remote-btn:hover {
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.18);
+  .remote-btn-label {
+    font-size: 0.58rem;
   }
-
-  .test-panel {
-    border-color: #e0e0e0;
-  }
-
-  .test-panel-toggle {
-    background-color: #f5f5f5;
-    color: #333;
-  }
-
-  .test-panel-toggle:hover {
-    background-color: #eee;
-  }
-
-  .test-command-row {
-    background-color: #f9f9f9;
-  }
-
-  .test-command-name {
-    color: #333;
-  }
-
-  .test-command-protocol {
-    color: #666;
-    background-color: #e8e8e8;
-  }
-
 }
