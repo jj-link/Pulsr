@@ -11,32 +11,39 @@ service cloud.firestore {
     function isOwner(ownerId) {
       return isAuthenticated() && request.auth.uid == ownerId;
     }
+
+    function isOwner'sData() {
+      return isAuthenticated() && request.auth.uid == resource.data.ownerId;
+    }
+    
+    // Device Claims collection
+    // Users can only read their own claims
+    match /deviceClaims/{claimId} {
+      allow read: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
     
     // Devices collection
     match /devices/{deviceId} {
-      // TEMPORARY: Allow all access for development (no auth required)
-      // TODO: Re-enable authentication before production
-      allow read, write: if true;
+      // Require authentication for all operations
+      allow read, write: if isAuthenticated();
+      // Note: Client should filter by ownerId in queries for production
       
       // Commands subcollection
       match /commands/{commandId} {
-        // TEMPORARY: Allow all access for development
-        allow read, write: if true;
+        allow read, write: if isAuthenticated();
       }
     }
     
     // Knowledge base (for chatbot)
     match /knowledgeBase/{articleId} {
-      // Anyone can read knowledge base
       allow read: if true;
-      
-      // Only admins can write (set this up separately)
       allow write: if false;
     }
     
     // Chat sessions
     match /chatSessions/{sessionId} {
-      // Users can only access their own sessions
       allow read, write: if isAuthenticated() 
         && request.auth.uid == resource.data.userId;
       

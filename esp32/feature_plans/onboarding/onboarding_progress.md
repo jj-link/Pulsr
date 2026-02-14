@@ -1,7 +1,7 @@
 # Onboarding - AP Provisioning Progress
 
 **Last Updated:** 2026-02-14
-**Current Phase:** Phase 3 Complete (Web Onboarding UX)
+**Current Phase:** Phase 4 Complete (Security Hardening)
 
 ## Status Summary
 - AP onboarding + claim code approach is approved.
@@ -33,9 +33,9 @@
 - [x] Refresh owned device list after successful claim
 
 ### Phase 4 - Security Hardening
-- [ ] Replace permissive Firestore rules
-- [ ] Restrict user access to owned devices only
-- [ ] Restrict device access to its own RTDB/Firestore paths
+- [x] Replace permissive Firestore rules
+- [x] Restrict user access to owned devices only
+- [x] Restrict device access to its own RTDB/Firestore paths
 
 ## Verification Checklist
 - [ ] Fresh ESP32 with empty NVS starts AP mode
@@ -49,4 +49,8 @@
 - None
 
 ## Next Action
-1. Start Phase 4 by hardening Firestore security rules.
+Onboarding feature is complete. All phases finished:
+1. ESP32 firmware (NVS + AP portal)
+2. Backend claim API
+3. Web onboarding UI
+4. Security hardening
