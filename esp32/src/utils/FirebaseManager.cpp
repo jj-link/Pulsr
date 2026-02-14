@@ -33,6 +33,42 @@ FirebaseManager::FirebaseManager(
     instance = this;
 }
 
+FirebaseManager::FirebaseManager(
+    const char* apiKey,
+    const char* projectId,
+    const char* databaseUrl,
+    const char* userEmail,
+    const char* userPassword
+) : wifiSSID(""),
+    wifiPassword(""),
+    apiKey(apiKey),
+    projectId(projectId),
+    databaseUrl(databaseUrl),
+    userEmail(userEmail),
+    userPassword(userPassword),
+    deviceId(""),
+    state(FirebaseState::DISCONNECTED),
+    lastConnectionAttempt(0),
+    streamStarted(false),
+    pendingLearningChange(false),
+    pendingLearningState(false),
+    pendingCommandReceived(false),
+    lastLearningState(false),
+    learningStateCallback(nullptr),
+    commandCallback(nullptr)
+{
+    instance = this;
+}
+
+void FirebaseManager::setWiFiCredentials(const char* wifiSSID, const char* wifiPassword) {
+    this->wifiSSID = wifiSSID;
+    this->wifiPassword = wifiPassword;
+}
+
+void FirebaseManager::setDeviceId(const char* deviceId) {
+    this->deviceId = deviceId;
+}
+
 bool FirebaseManager::begin() {
     Serial.println("[Firebase] Initializing...");
     

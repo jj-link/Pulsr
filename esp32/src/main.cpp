@@ -6,70 +6,57 @@
  * - IR signal transmission via RTDB pendingCommand (transmitter)
  * - Firestore integration for command storage
  * - Real-time control from web UI via RTDB streaming
+ * - Runtime provisioning via AP setup portal (onboarding)
  * 
  * Architecture:
  * - Uses interface abstractions for testability
  * - Dependency injection for loose coupling
  * - Callback-based event system
+ * - Boot modes: UNPROVISIONED, PROVISIONED_UNCLAIMED, RUNNING, RECOVERY
  */
 
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 #include "config.h"
 
-// Receiver components
+#include "utils/ProvisioningManager.h"
+#include "utils/APSetupServer.h"
+#include "utils/ClaimManager.h"
+
 #include "receiver/ESP32SignalCapture.h"
 #include "receiver/IRLibProtocolDecoder.h"
 #include "receiver/LearningStateMachine.h"
-
-// Transmitter components
 #include "transmitter/ESP32IRTransmitter.h"
-
-// Firebase integration
 #include "utils/FirebaseManager.h"
-
-// Firebase helper includes (must be after FirebaseManager)
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
 
-// ============== Hardware Instances ==============
+ProvisioningManager provisioningManager;
+APSetupServer* apSetupServer = nullptr;
+ClaimManager* claimManager = nullptr;
 
-// Receiver subsystem
 ESP32SignalCapture signalCapture(IR_RECEIVE_PIN);
 IRLibProtocolDecoder protocolDecoder;
 LearningStateMachine learningStateMachine(&signalCapture, &protocolDecoder, LEARNING_TIMEOUT_MS);
+ESP32IRTransmitter irTransmitter(IR_SEND_PIN, false);
+FirebaseManager* firebaseManager = nullptr;
 
-// Transmitter subsystem
-ESP32IRTransmitter irTransmitter(IR_SEND_PIN, false);  // GPIO 4, not inverted
-
-// Firebase integration
-FirebaseManager firebaseManager(
-    WIFI_SSID,
-    WIFI_PASSWORD,
-    FIREBASE_API_KEY,
-    FIREBASE_PROJECT_ID,
-    FIREBASE_DATABASE_URL,
-    FIREBASE_USER_EMAIL,
-    FIREBASE_USER_PASSWORD,
-    DEVICE_ID
-);
-
-// Status LED
 Adafruit_NeoPixel statusLED(NEOPIXEL_COUNT, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
-// ============== Color Definitions ==============
 #define COLOR_OFF           statusLED.Color(0, 0, 0)
-#define COLOR_CONNECTING    statusLED.Color(20, 20, 0)   // Yellow = connecting
-#define COLOR_READY         statusLED.Color(0, 20, 0)    // Dim green = ready
-#define COLOR_LEARNING      statusLED.Color(0, 0, 100)   // Blue = listening
-#define COLOR_SUCCESS       statusLED.Color(0, 100, 0)   // Green = success
-#define COLOR_ERROR         statusLED.Color(100, 0, 0)   // Red = error
-#define COLOR_TIMEOUT       statusLED.Color(100, 50, 0)  // Orange = timeout
-#define COLOR_TX_PROCESSING statusLED.Color(80, 0, 80)   // Purple = processing command
-#define COLOR_TX_SUCCESS    statusLED.Color(0, 100, 50)   // Cyan-green = transmit success
-#define COLOR_TX_FAILED     statusLED.Color(100, 20, 0)   // Red-orange = transmit failed
+#define COLOR_CONNECTING    statusLED.Color(20, 20, 0)
+#define COLOR_READY         statusLED.Color(0, 20, 0)
+#define COLOR_LEARNING      statusLED.Color(0, 0, 100)
+#define COLOR_SUCCESS       statusLED.Color(0, 100, 0)
+#define COLOR_ERROR         statusLED.Color(100, 0, 0)
+#define COLOR_TIMEOUT       statusLED.Color(100, 50, 0)
+#define COLOR_TX_PROCESSING statusLED.Color(80, 0, 80)
+#define COLOR_TX_SUCCESS    statusLED.Color(0, 100, 50)
+#define COLOR_TX_FAILED     statusLED.Color(100, 20, 0)
+#define COLOR_AP_MODE       statusLED.Color(50, 50, 100)
+#define COLOR_CLAIMING      statusLED.Color(100, 100, 0)
 
-// ============== Callback Handlers ==============
+bool runningModeActive = false;
 
 void onLearningStateChanged(LearningState state) {
     Serial.print("[Learning] State changed: ");
@@ -79,8 +66,7 @@ void onLearningStateChanged(LearningState state) {
             Serial.println("IDLE");
             statusLED.setPixelColor(0, COLOR_READY);
             statusLED.show();
-            // Update Firestore to indicate learning complete
-            firebaseManager.setLearningMode(false);
+            if (firebaseManager) firebaseManager->setLearningMode(false);
             break;
             
         case LearningState::LEARNING:
@@ -119,16 +105,14 @@ void onSignalCaptured(const DecodedSignal& signal) {
     Serial.println(signal.isKnownProtocol ? "Yes" : "No");
     Serial.println("=========================================");
     
-    // Upload to Firestore
     String commandName = String("cmd_") + String(millis());
-    if (firebaseManager.uploadSignal(signal, commandName)) {
+    if (firebaseManager && firebaseManager->uploadSignal(signal, commandName)) {
         Serial.println("[Main] Signal uploaded to Firestore successfully!");
     } else {
         Serial.println("[Main] Failed to upload signal to Firestore");
     }
 }
 
-// Track when to revert LED back to ready after transmit flash
 unsigned long txLedRevertTime = 0;
 
 void onCommandReceived(const PendingCommand& cmd) {
@@ -142,7 +126,6 @@ void onCommandReceived(const PendingCommand& cmd) {
     Serial.print(" bits=");
     Serial.println(cmd.bits);
     
-    // Dispatch to library's native sender based on protocol
     TransmitResult result;
     if (cmd.protocol == "SAMSUNG") {
         result = irTransmitter.transmitSamsung(cmd.value, cmd.bits);
@@ -188,81 +171,179 @@ void onFirebaseLearningModeChanged(bool isLearning) {
     }
 }
 
-// ============== Setup ==============
+void handleUnprovisionedMode() {
+    Serial.println("[Main] Starting UNPROVISIONED mode - AP setup portal");
+    
+    statusLED.setPixelColor(0, COLOR_AP_MODE);
+    statusLED.show();
+    
+    apSetupServer = new APSetupServer(&provisioningManager);
+    apSetupServer->begin();
+    
+    while (true) {
+        apSetupServer->update();
+        delay(10);
+    }
+}
+
+void handleProvisionedUnclaimedMode() {
+    Serial.println("[Main] Starting PROVISIONED_UNCLAIMED mode - attempting claim");
+    
+    statusLED.setPixelColor(0, COLOR_CLAIMING);
+    statusLED.show();
+    
+    claimManager = new ClaimManager(
+        &provisioningManager,
+        FIREBASE_API_KEY,
+        FIREBASE_PROJECT_ID,
+        FIREBASE_DATABASE_URL
+    );
+    
+    ClaimResult result = claimManager->redeemClaim();
+    
+    if (result.success) {
+        Serial.println("[Main] Claim successful! Rebooting to RUNNING mode...");
+        statusLED.setPixelColor(0, COLOR_SUCCESS);
+        statusLED.show();
+        delay(2000);
+        ESP.restart();
+    } else {
+        Serial.print("[Main] Claim failed: ");
+        Serial.println(result.errorMessage);
+        
+        Serial.println("[Main] Rebooting to retry...");
+        statusLED.setPixelColor(0, COLOR_ERROR);
+        statusLED.show();
+        delay(3000);
+        ESP.restart();
+    }
+}
 
 void setup() {
     Serial.begin(115200);
-    Serial.println("\n[Pulsr] Starting up...");
-    Serial.print("[Pulsr] Device ID: ");
-    Serial.println(DEVICE_ID);
+    Serial.println("\n========================================");
+    Serial.println("[Pulsr] Starting up...");
+    Serial.println("========================================");
     
-    // Initialize NeoPixel
     statusLED.begin();
     statusLED.setBrightness(NEOPIXEL_BRIGHTNESS);
     statusLED.setPixelColor(0, COLOR_CONNECTING);
     statusLED.show();
     
-    // IR receiver is initialized on-demand when learning mode is activated
-    Serial.print("[Pulsr] IR Receiver on GPIO ");
-    Serial.println(IR_RECEIVE_PIN);
-    
-    // Initialize IR transmitter
-    irTransmitter.begin();
-    Serial.print("[Pulsr] IR Transmitter initialized on GPIO ");
-    Serial.println(IR_SEND_PIN);
-    
-    // Set up callbacks
-    learningStateMachine.onStateChange(onLearningStateChanged);
-    learningStateMachine.onSignalCapture(onSignalCaptured);
-    firebaseManager.onLearningStateChange(onFirebaseLearningModeChanged);
-    firebaseManager.onCommandReceived(onCommandReceived);
-    
-    // Connect to Firebase
-    Serial.println("[Pulsr] Connecting to Firebase...");
-    if (firebaseManager.begin()) {
-        Serial.println("[Pulsr] Firebase connection initiated");
-    } else {
-        Serial.println("[Pulsr] Firebase connection failed - will retry");
-        statusLED.setPixelColor(0, COLOR_ERROR);
-        statusLED.show();
+    if (!provisioningManager.begin()) {
+        Serial.println("[Main] Failed to initialize NVS - forcing AP mode");
+        handleUnprovisionedMode();
+        return;
     }
     
-    Serial.println("[Pulsr] Initialization complete!");
+    String hardwareId = provisioningManager.getHardwareId();
+    Serial.print("[Pulsr] Hardware ID: ");
+    Serial.println(hardwareId);
+    
+    BootMode bootMode = provisioningManager.determineBootMode();
+    
+    Serial.print("[Pulsr] Boot mode: ");
+    switch (bootMode) {
+        case BootMode::UNPROVISIONED:
+            Serial.println("UNPROVISIONED");
+            break;
+        case BootMode::PROVISIONED_UNCLAIMED:
+            Serial.println("PROVISIONED_UNCLAIMED");
+            break;
+        case BootMode::RUNNING:
+            Serial.println("RUNNING");
+            break;
+        case BootMode::RECOVERY:
+            Serial.println("RECOVERY");
+            break;
+    }
+    
+    switch (bootMode) {
+        case BootMode::UNPROVISIONED:
+        case BootMode::RECOVERY:
+            handleUnprovisionedMode();
+            break;
+            
+        case BootMode::PROVISIONED_UNCLAIMED:
+            handleProvisionedUnclaimedMode();
+            break;
+            
+        case BootMode::RUNNING: {
+            String deviceId = provisioningManager.getDeviceId();
+            String wifiSSID = provisioningManager.getWiFiSSID();
+            String wifiPassword = provisioningManager.getWiFiPassword();
+            
+            Serial.print("[Pulsr] Device ID: ");
+            Serial.println(deviceId);
+            
+            firebaseManager = new FirebaseManager(
+                FIREBASE_API_KEY,
+                FIREBASE_PROJECT_ID,
+                FIREBASE_DATABASE_URL,
+                FIREBASE_USER_EMAIL,
+                FIREBASE_USER_PASSWORD
+            );
+            firebaseManager->setWiFiCredentials(wifiSSID.c_str(), wifiPassword.c_str());
+            firebaseManager->setDeviceId(deviceId.c_str());
+            
+            Serial.println("[Main] Starting RUNNING mode - normal operation");
+            
+            Serial.print("[Pulsr] IR Receiver on GPIO ");
+            Serial.println(IR_RECEIVE_PIN);
+            
+            irTransmitter.begin();
+            Serial.print("[Pulsr] IR Transmitter initialized on GPIO ");
+            Serial.println(IR_SEND_PIN);
+            
+            learningStateMachine.onStateChange(onLearningStateChanged);
+            learningStateMachine.onSignalCapture(onSignalCaptured);
+            firebaseManager->onLearningStateChange(onFirebaseLearningModeChanged);
+            firebaseManager->onCommandReceived(onCommandReceived);
+            
+            Serial.println("[Pulsr] Connecting to Firebase...");
+            if (firebaseManager->begin()) {
+                Serial.println("[Pulsr] Firebase connection initiated");
+            } else {
+                Serial.println("[Pulsr] Firebase connection failed - will retry");
+                statusLED.setPixelColor(0, COLOR_ERROR);
+                statusLED.show();
+            }
+            
+            runningModeActive = true;
+            Serial.println("[Pulsr] Initialization complete!");
+            break;
+        }
+    }
 }
 
-// ============== Main Loop ==============
-
 void loop() {
-    // Update Firebase connection and process RTDB stream events
-    firebaseManager.update();
-    
-    // Update learning state machine (handles timeouts and signal capture)
-    learningStateMachine.update();
-    
-    // Revert transmit LED flash back to ready color after timeout
-    if (txLedRevertTime > 0 && millis() >= txLedRevertTime) {
-        statusLED.setPixelColor(0, COLOR_READY);
-        statusLED.show();
-        txLedRevertTime = 0;
-    }
-    
-    // Update status LED based on Firebase state
-    static FirebaseState lastFirebaseState = FirebaseState::DISCONNECTED;
-    FirebaseState currentFirebaseState = firebaseManager.getState();
-    
-    if (currentFirebaseState != lastFirebaseState) {
-        if (currentFirebaseState == FirebaseState::FIREBASE_READY) {
+    if (runningModeActive && firebaseManager) {
+        firebaseManager->update();
+        learningStateMachine.update();
+        
+        if (txLedRevertTime > 0 && millis() >= txLedRevertTime) {
             statusLED.setPixelColor(0, COLOR_READY);
             statusLED.show();
-        } else if (currentFirebaseState == FirebaseState::ERROR_WIFI_FAILED ||
-                   currentFirebaseState == FirebaseState::ERROR_AUTH_FAILED) {
-            statusLED.setPixelColor(0, COLOR_ERROR);
-            statusLED.show();
-        } else {
-            statusLED.setPixelColor(0, COLOR_CONNECTING);
-            statusLED.show();
+            txLedRevertTime = 0;
         }
-        lastFirebaseState = currentFirebaseState;
+        
+        static FirebaseState lastFirebaseState = FirebaseState::DISCONNECTED;
+        FirebaseState currentFirebaseState = firebaseManager->getState();
+        
+        if (currentFirebaseState != lastFirebaseState) {
+            if (currentFirebaseState == FirebaseState::FIREBASE_READY) {
+                statusLED.setPixelColor(0, COLOR_READY);
+                statusLED.show();
+            } else if (currentFirebaseState == FirebaseState::ERROR_WIFI_FAILED ||
+                       currentFirebaseState == FirebaseState::ERROR_AUTH_FAILED) {
+                statusLED.setPixelColor(0, COLOR_ERROR);
+                statusLED.show();
+            } else {
+                statusLED.setPixelColor(0, COLOR_CONNECTING);
+                statusLED.show();
+            }
+            lastFirebaseState = currentFirebaseState;
+        }
     }
     
     delay(10);

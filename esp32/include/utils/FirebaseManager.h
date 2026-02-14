@@ -41,6 +41,17 @@ public:
         const char* userPassword,
         const char* deviceId
     );
+    
+    FirebaseManager(
+        const char* apiKey,
+        const char* projectId,
+        const char* databaseUrl,
+        const char* userEmail,
+        const char* userPassword
+    );
+    
+    void setWiFiCredentials(const char* wifiSSID, const char* wifiPassword);
+    void setDeviceId(const char* deviceId);
 
     // Connection management
     bool begin();
