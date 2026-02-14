@@ -5,15 +5,15 @@ import { useCommands } from '../hooks/useCommands'
 import { DeviceSelector } from '../components/DeviceSelector'
 import { LearningModal } from '../components/LearningModal'
 import { CommandList } from '../components/CommandList'
-import { CreateDeviceModal } from '../components/CreateDeviceModal'
+import { OnboardingModal } from '../components/OnboardingModal'
 import './LearningPage.css'
 
 export function LearningPage() {
   const { deviceRepository, commandRepository } = useRepositories()
-  const { devices, setLearningMode, createDevice, clearPendingSignal } = useDevices(deviceRepository)
+  const { devices, setLearningMode, clearPendingSignal } = useDevices(deviceRepository)
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null)
   const [showLearningModal, setShowLearningModal] = useState(false)
-  const [showCreateDeviceModal, setShowCreateDeviceModal] = useState(false)
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false)
   const { commands, deleteCommand, updateCommand } = useCommands(commandRepository, selectedDeviceId)
 
   const selectedDevice = devices.find((d) => d.id === selectedDeviceId)
@@ -48,12 +48,6 @@ export function LearningPage() {
     setShowLearningModal(false)
   }
 
-  const handleCreateDevice = async (name: string, deviceId: string) => {
-    const device = await createDevice(name, deviceId, 'user_123')
-    setSelectedDeviceId(device.id)
-    setShowCreateDeviceModal(false)
-  }
-
   return (
     <div className="learning-page">
       <div className="page-header">
@@ -66,7 +60,7 @@ export function LearningPage() {
           devices={devices}
           selectedDeviceId={selectedDeviceId}
           onSelectDevice={setSelectedDeviceId}
-          onCreateDevice={() => setShowCreateDeviceModal(true)}
+          onCreateDevice={() => setShowOnboardingModal(true)}
         />
 
         {selectedDevice && (
@@ -99,10 +93,9 @@ export function LearningPage() {
         pendingSignal={selectedDevice?.pendingSignal}
       />
 
-      <CreateDeviceModal
-        isOpen={showCreateDeviceModal}
-        onClose={() => setShowCreateDeviceModal(false)}
-        onCreate={handleCreateDevice}
+      <OnboardingModal
+        isOpen={showOnboardingModal}
+        onClose={() => setShowOnboardingModal(false)}
       />
     </div>
   )

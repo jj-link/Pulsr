@@ -1,7 +1,7 @@
 # Onboarding - AP Provisioning Progress
 
 **Last Updated:** 2026-02-14
-**Current Phase:** Phase 2 Complete (Backend - Claim API)
+**Current Phase:** Phase 3 Complete (Web Onboarding UX)
 
 ## Status Summary
 - AP onboarding + claim code approach is approved.
@@ -28,9 +28,9 @@
 - [x] Bind `deviceId` to `ownerId` transactionally
 
 ### Phase 3 - Web Onboarding UX
-- [ ] Add `Add Device` claim-code flow
-- [ ] Show onboarding steps and claim status (`waiting`, `claimed`, `expired`, `failed`)
-- [ ] Refresh owned device list after successful claim
+- [x] Add `Add Device` claim-code flow
+- [x] Show onboarding steps and claim status (`waiting`, `claimed`, `expired`, `failed`)
+- [x] Refresh owned device list after successful claim
 
 ### Phase 4 - Security Hardening
 - [ ] Replace permissive Firestore rules
@@ -49,4 +49,4 @@
 - None
 
 ## Next Action
-1. Start Phase 3 by implementing web onboarding UI with claim-code flow.
+1. Start Phase 4 by hardening Firestore security rules.
