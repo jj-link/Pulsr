@@ -1,7 +1,7 @@
 # Onboarding - AP Provisioning Progress
 
-**Last Updated:** 2026-02-12
-**Current Phase:** Phase 1 Complete (ESP32 Firmware - NVS + AP Portal)
+**Last Updated:** 2026-02-14
+**Current Phase:** Phase 2 Complete (Backend - Claim API)
 
 ## Status Summary
 - AP onboarding + claim code approach is approved.
@@ -22,10 +22,10 @@
 - [x] Add factory reset path
 
 ### Phase 2 - Backend (Claim API)
-- [ ] Add `POST /claims/create`
-- [ ] Add `POST /claims/redeem`
-- [ ] Persist one-time claims with TTL and consumed state
-- [ ] Bind `deviceId` to `ownerId` transactionally
+- [x] Add `POST /claims/create`
+- [x] Add `POST /claims/redeem`
+- [x] Persist one-time claims with TTL and consumed state
+- [x] Bind `deviceId` to `ownerId` transactionally
 
 ### Phase 3 - Web Onboarding UX
 - [ ] Add `Add Device` claim-code flow
@@ -49,4 +49,4 @@
 - None
 
 ## Next Action
-1. Start Phase 1 by implementing NVS storage + boot mode selection in firmware.
+1. Start Phase 3 by implementing web onboarding UI with claim-code flow.
